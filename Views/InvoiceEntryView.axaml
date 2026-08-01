@@ -1,0 +1,188 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Obcred.ViewModels"
+             xmlns:sys="using:System"
+             xmlns:col="using:System.Collections.Generic"
+             xmlns:models="using:Obcred.Models"
+             x:DataType="viewModels:InvoiceViewModel"
+             x:Class="Obcred.Views.InvoiceEntryView"
+             xmlns:viewModels="clr-namespace:Obcred.ViewModels">
+    
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="*"/>    
+        </Grid.RowDefinitions>
+
+        <!-- PAGE TITLE: Replaced Style with Classes -->
+        <TextBlock Grid.Row="0" Text="Create Invoice" Classes="PageTitleStyle"/>
+
+        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,20" BoxShadow="0 2 10 0 #08000000">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2.5*"/>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="180"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 1. DOCUMENT DETAILS -->
+                <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                    <TextBlock Text="Document Details" Classes="CardHeaderStyle"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,12,12">
+                            <Label Content="Invoice No."/>
+                            <TextBox Text="{Binding InvoiceNumber}" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
+                            <Label Content="Doc Type"/>
+                            <ComboBox SelectedValueBinding="{Binding SelectedDocumentType}" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
+                                <ComboBoxItem Content="100" Tag="100" IsSelected="True"/>
+                                <ComboBoxItem Content="380" Tag="380"/>
+                                <ComboBoxItem Content="383" Tag="383"/>
+                            </ComboBox>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,0">
+                            <Label Content="Issue Date"/>
+                            <DatePicker SelectedDate="{Binding InvoiceDate}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1">
+                            <Label Content="Turnover Date"/>
+                            <DatePicker SelectedDate="{Binding TurnoverDate}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- 2. BUYER INFORMATION -->
+                <StackPanel Grid.Column="1" Margin="0,0,24,0">
+                    <TextBlock Text="Buyer Information" Classes="CardHeaderStyle"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,12,12">
+                            <Label Content="Select Saved Client"/>
+                            <ComboBox ItemsSource="{Binding AllClients}" SelectedItem="{Binding SelectedClient}" DisplayMemberBinding="{Binding Name}" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,12">
+                            <Label Content="EDB (Tax No.)"/>
+                            <TextBox Text="{Binding BuyerEdb}" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,12,0">
+                            <Label Content="Official Name"/>
+                            <TextBox Text="{Binding BuyerName}" IsReadOnly="True" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="2">
+                            <Label Content="City"/>
+                            <TextBox Text="{Binding SelectedClient.City}" IsReadOnly="True" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- 3. ACTIONS -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#10B981" FontWeight="Bold" Margin="0,0,0,8" TextWrapping="Wrap" FontSize="11" TextAlignment="Center" Height="28"/>
+                    <Button Content="Lookup UJP" Command="{Binding LookupCompanyCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn" Background="#E2E8F0" Foreground="#1E293B" Margin="0,0,0,12"/>
+                    <Button Content="Save PDF" Command="{Binding SavePdfCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn" Background="#E2E8F0" Foreground="#1E293B" Margin="0,0,0,12"/>
+                    <Button Content="Submit Invoice" Command="{Binding SubmitInvoiceCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn"/>
+                    <ProgressBar IsIndeterminate="True" Height="4" Margin="0,8,0,0" IsVisible="{Binding IsBusy}" Foreground="#3B82F6"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- BOTTOM CARD -->
+        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="20" BoxShadow="0 2 10 0 #08000000">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> 
+                    <RowDefinition Height="*"/>    
+                    <RowDefinition Height="Auto"/> 
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <TextBlock Text="Line Items" Classes="CardHeaderStyle" Margin="0"/>
+                    <Button Content="+ Add New Line" Command="{Binding AddBlankItemCommand}" Background="Transparent" Foreground="#3B82F6" FontWeight="SemiBold" HorizontalAlignment="Right" BorderThickness="0" Cursor="Hand"/>
+                </Grid>
+
+                <!-- Removed CanUserAddRows="False" -->
+                <DataGrid Grid.Row="1" ItemsSource="{Binding InvoiceItems}" AutoGenerateColumns="False" Margin="0,0,0,16" BorderThickness="1" BorderBrush="#E2E8F0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Item Name" Binding="{Binding Desc}" Width="*"/>
+                        
+                        <!-- Fixed x:Array initialization -->
+                        <DataGridTemplateColumn Header="DDV (%)" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ComboBox SelectedItem="{Binding TaxIndicator}"
+                                              ItemsSource="{x:Static models:VatRates.DisplayNames}"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Center"
+                                              Background="Transparent"
+                                              BorderThickness="0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Qty" Binding="{Binding Qty}" Width="80"/>
+                        <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice}" Width="120"/>
+                        <DataGridTextColumn Header="Row Total" Binding="{Binding RowGrossTotal, StringFormat='{}{0:N2}'}" IsReadOnly="True" Width="120"/>
+
+                        <DataGridTemplateColumn Header="" Width="46">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="✕"
+                                            Command="{Binding $parent[DataGrid].((viewModels:InvoiceViewModel)DataContext).RemoveItemCommand}"
+                                            CommandParameter="{Binding}"
+                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                            Foreground="#DC2626" FontWeight="Bold"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            ToolTip.Tip="Remove this line"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Totals Footer -->
+                <Grid Grid.Row="2">
+                    <StackPanel HorizontalAlignment="Right" Width="260">
+                        <Grid Margin="0,0,0,8">
+                            <TextBlock Text="Subtotal:" Foreground="#64748B" FontSize="13"/>
+                            <TextBlock Text="{Binding NetAmount, StringFormat='{}{0:N2} MKD'}" FontWeight="SemiBold" Foreground="#1E293B" HorizontalAlignment="Right" FontSize="13"/>
+                        </Grid>
+                        
+                        <Grid Margin="0,0,0,12">
+                            <TextBlock Text="Total DDV:" Foreground="#64748B" FontSize="13"/>
+                            <TextBlock Text="{Binding VatAmount, StringFormat='{}{0:N2} MKD'}" FontWeight="SemiBold" Foreground="#1E293B" HorizontalAlignment="Right" FontSize="13"/>
+                        </Grid>
+                        
+                        <Rectangle Height="1" Fill="#E2E8F0" Margin="0,0,0,12"/>
+                        
+                        <Grid>
+                            <TextBlock Text="Full Price:" FontWeight="Bold" Foreground="#0F172A" FontSize="16" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding GrossAmount, StringFormat='{}{0:N2} MKD'}" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Right" FontSize="20"/>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

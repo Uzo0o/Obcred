@@ -1,0 +1,63 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" 
+        x:Class="Obcred.Views.SettingsWindow"
+        Title="SettingsWindow"
+        xmlns:vm="using:Obcred.ViewModels"
+        x:DataType="vm:SettingsViewModel"
+        >
+    
+    <StackPanel Margin="20">
+        <TextBlock Text="Software Setup" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+        
+        <Label Content="1. Select Digital Certificate Source:" FontWeight="Bold"/>
+        
+        <Grid Margin="0,0,0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="100"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Text="{Binding CertThumbprint}" IsReadOnly="True" Background="#EEEEEE" Grid.Column="0"/>
+            <Button Content="Load USB" Command="{Binding SelectUsbCertificateCommand}" Grid.Column="1" Margin="5,0,0,0"/>
+        </Grid>
+
+        <TextBlock Text="- OR -" HorizontalAlignment="Center" Foreground="Gray" Margin="0,5,0,5" FontWeight="Bold"/>
+
+        <Grid Margin="0,0,0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="100"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Text="{Binding CertPath, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Background="#EEEEEE" Grid.Column="0"/>
+            <Button Content="Browse .pfx" Command="{Binding BrowseCertificateCommand}" Grid.Column="1" Margin="5,0,0,0"/>
+        </Grid>
+        
+        <Label Content="PFX Password (leave blank if USB):" Margin="0,5,0,0"/>
+        <TextBox Text="{Binding CertPassword, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
+
+        <Label Content="2. Your Company EDB:" FontWeight="Bold"/>
+        <TextBox Text="{Binding SellerEdb, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
+        
+        <Label Content="3. EUJP-ID (From Portal):" FontWeight="Bold"/>
+        <TextBox Text="{Binding EujpId, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
+
+        <Label Content="4. Invoice Number Prefix (optional, e.g. INV-):" FontWeight="Bold"/>
+        <TextBox Text="{Binding InvoiceNumberPrefix, UpdateSourceTrigger=PropertyChanged}"
+                 Watermark="Leave blank for 2026-0001" Margin="0,0,0,15"/>
+
+        <Label Content="5. Environment:" FontWeight="Bold"/>
+        <CheckBox Content="Use PRODUCTION (LIVE) environment — sends real fiscal invoices"
+                  IsChecked="{Binding UseProductionEnvironment}" Margin="0,0,0,4"/>
+        <TextBlock Text="Leave unchecked to use the UJP TEST sandbox."
+                   Foreground="Gray" FontSize="12" Margin="0,0,0,20"/>
+
+        <Button Content="Verify &amp; Save Setup"
+                Command="{Binding SaveAndVerifyCommand}" 
+                Height="35" FontSize="14" FontWeight="Bold" 
+                Background="#0078D7" Foreground="White" BorderThickness="0"/>
+
+        <TextBlock Text="{Binding StatusMessage}" Margin="0,15,0,0" Foreground="Red" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+    </StackPanel>
+</Window>

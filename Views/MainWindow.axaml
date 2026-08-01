@@ -1,0 +1,105 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Obcred.ViewModels"
+        xmlns:views="using:Obcred.Views"
+        x:Class="Obcred.Views.MainWindow"
+        x:DataType="vm:InvoiceViewModel"
+        Icon="/logo64.ico"
+        Title="Obcred"
+        SystemDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
+        
+    <Window.Styles>
+        <Style Selector="Button.WindowControlBtnStyle">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+
+        <Style Selector="Button.CyanWindowBtnStyle">
+            <Setter Property="Background" Value="#1B3A6B"/>
+        </Style>
+        <Style Selector="Button.CyanWindowBtnStyle:pointerover">
+            <Setter Property="Background" Value="#4CD3DA"/>
+        </Style>
+
+        <Style Selector="Button.RedWindowBtnStyle">
+            <Setter Property="Background" Value="#FF6B6B"/>
+        </Style>
+        <Style Selector="Button.RedWindowBtnStyle:pointerover">
+            <Setter Property="Background" Value="#E81123"/>
+        </Style>
+    </Window.Styles>
+
+    <Border Background="White" CornerRadius="24" ClipToBounds="True" BorderBrush="{StaticResource BorderLight}" BorderThickness="1">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/> 
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- SIDEBAR -->
+            <Grid Grid.Column="0" Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="80"/> 
+                    <RowDefinition Height="*"/>  
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="25,0,0,0">
+                    <TextBlock Text="INTEGRITI" FontWeight="Black" FontSize="20" Foreground="#212529" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Margin="0,20,0,0">
+                    <!-- Standard RadioButtons; you can style these later using Avalonia's :checked selector -->
+                    <RadioButton Content="New Invoice" Margin="20,5" IsChecked="True" Click="NavNewInvoice_Click"/>
+                    <RadioButton Content="Client List" Margin="20,5" IsEnabled="False"/>
+                    <RadioButton Content="Invoice History" Margin="20,5" Click="NavHistory_Click"/>
+                    <Button Content="⚙ Settings" Margin="20,20,20,5" HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0"
+                            Cursor="Hand" Click="OpenSettings_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- MAIN CONTENT -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60"/> 
+                    <RowDefinition Height="*"/>  
+                </Grid.RowDefinitions>
+
+                <!-- TOP BAR -->
+                <Grid Grid.Row="0" Background="White" PointerPressed="TopBar_PointerPressed">
+                    <Border BorderBrush="#E9ECEF" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <TextBlock Text="Create New Invoice" VerticalAlignment="Center" Margin="30,0,0,0" FontWeight="Bold" Foreground="#212529" FontSize="18"/>
+
+                            <!-- ENVIRONMENT BANNER -->
+                            <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Border IsVisible="{Binding IsTest}" Background="#DCFCE7" CornerRadius="6" Padding="12,4">
+                                    <TextBlock Text="{Binding EnvironmentBanner}" FontWeight="Bold" FontSize="13" Foreground="#059669"/>
+                                </Border>
+                                <Border IsVisible="{Binding IsProduction}" Background="#FEE2E2" CornerRadius="6" Padding="12,4">
+                                    <TextBlock Text="{Binding EnvironmentBanner}" FontWeight="Bold" FontSize="13" Foreground="#DC2626"/>
+                                </Border>
+                            </Panel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,15,0" VerticalAlignment="Center">
+                                <Button Click="Minimize_Click" Classes="WindowControlBtnStyle CyanWindowBtnStyle" Content="-"/>
+                                <Button Click="Maximize_Click" Classes="WindowControlBtnStyle CyanWindowBtnStyle" Content="[ ]"/>
+                                <Button Click="Close_Click" Classes="WindowControlBtnStyle RedWindowBtnStyle" Content="X" Margin="24,0,0,0"/> 
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- VIEW CONTAINER -->
+                <Grid Grid.Row="1" Background="#E1EBF9">
+                    <ContentControl x:Name="PageHost"/>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

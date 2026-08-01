@@ -1,0 +1,85 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Obcred.App"
+             xmlns:local="using:Obcred"
+             RequestedThemeVariant="Light">
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+  
+    <!-- 1. DEFINE RESOURCES FIRST -->
+    <Application.Resources>
+        <!-- Font paths use avares:// in Avalonia -->
+        <FontFamily x:Key="Poppins">avares://Obcred/Assets/Fonts/#Poppins</FontFamily>
+
+        <!-- COLORS -->
+        <SolidColorBrush x:Key="BrandPrimary" Color="#1B3A6B"/> 
+        <SolidColorBrush x:Key="BrandAccent" Color="#2E86FF"/> 
+        <SolidColorBrush x:Key="BrandBackground" Color="#F4F7FC"/> 
+        <SolidColorBrush x:Key="BrandText" Color="#1A1A2E"/> 
+        <SolidColorBrush x:Key="BrandSuccess" Color="#00B894"/> 
+        <SolidColorBrush x:Key="BrandDanger" Color="#FF4757"/> 
+        <SolidColorBrush x:Key="SurfaceWhite" Color="#FFFFFF"/> 
+        <SolidColorBrush x:Key="BorderLight" Color="#E2E8F0"/> 
+        <SolidColorBrush x:Key="TextMuted" Color="#64748B"/> 
+    </Application.Resources>
+
+    <!-- 2. USE STYLES SECOND -->
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+
+        <!-- ========================================== -->
+        <!-- 1. TYPOGRAPHY & BASIC CLASSES              -->
+        <!-- ========================================== -->
+        <Style Selector="TextBlock.PageTitleStyle">
+            <Setter Property="Foreground" Value="{StaticResource BrandText}"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,20"/>
+        </Style>
+
+        <Style Selector="TextBlock.CardHeaderStyle">
+            <Setter Property="Foreground" Value="{StaticResource BrandPrimary}"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <!-- ========================================== -->
+        <!-- 2. BUTTON (With CSS-like Hover)            -->
+        <!-- ========================================== -->
+        <Style Selector="Button.PrimaryActionBtn">
+            <Setter Property="Background" Value="{StaticResource BrandAccent}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="24,0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.PrimaryActionBtn:pointerover">
+            <Setter Property="Background" Value="#1B3A6B"/>
+            <Setter Property="RenderTransform" Value="translateY(-2px)"/>
+        </Style>
+        
+        <!-- ========================================== -->
+        <!-- 3. DATAGRID HEADER                         -->
+        <!-- ========================================== -->
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10"/>
+        </Style>
+    </Application.Styles>
+</Application>

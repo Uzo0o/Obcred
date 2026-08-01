@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:Obcred.ViewModels"
+             xmlns:converters="using:Avalonia.Data.Converters"
+             x:DataType="viewModels:HistoryViewModel"
+             x:Class="Obcred.Views.InvoiceHistoryView">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- TITLE + REFRESH -->
+        <Grid Grid.Row="0">
+            <TextBlock Text="Invoice History" Classes="PageTitleStyle"/>
+            <Button Content="Refresh"
+                    Command="{Binding LoadCommand}"
+                    Classes="PrimaryActionBtn"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"/>
+        </Grid>
+
+        <!-- LIST + DETAIL -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.6*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT: list of submitted invoices -->
+            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="12"
+                    Margin="0,0,12,0" BoxShadow="0 2 10 0 #08000000">
+                <DataGrid ItemsSource="{Binding Invoices}"
+                          SelectedItem="{Binding SelectedInvoice}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal"
+                          BorderThickness="0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Invoice No." Binding="{Binding DocNumber}" Width="*"/>
+                        <DataGridTextColumn Header="Date" Binding="{Binding IssueDate}" Width="110"/>
+                        <DataGridTextColumn Header="Buyer" Binding="{Binding BuyerName}" Width="1.4*"/>
+                        <DataGridTextColumn Header="Total"
+                                            Binding="{Binding GrossAmount, StringFormat='{}{0:N2}'}"
+                                            Width="120"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- RIGHT: detail of the selected invoice -->
+            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20"
+                    BoxShadow="0 2 10 0 #08000000">
+                <ScrollViewer>
+                    <StackPanel>
+                        <TextBlock Text="Selected Invoice" Classes="CardHeaderStyle"/>
+
+                        <StackPanel IsVisible="{Binding SelectedInvoice, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
+                            <TextBlock Text="{Binding SelectedInvoice.DocNumber, StringFormat='No.: {0}'}"
+                                       FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding SelectedInvoice.BuyerName, StringFormat='Buyer: {0}'}"
+                                       Foreground="#64748B" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding SelectedInvoice.IssueDate, StringFormat='Issued: {0}'}"
+                                       Foreground="#64748B" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding SelectedInvoice.GrossAmount, StringFormat='Total: {0:N2} MKD'}"
+                                       Foreground="#64748B" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding SelectedInvoice.Status, StringFormat='Status: {0}'}"
+                                       FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,12"/>
+
+                            <Button Content="Save PDF" Command="{Binding ExportPdfCommand}"
+                                    Classes="PrimaryActionBtn" HorizontalAlignment="Left" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="#10B981"
+                                       TextWrapping="Wrap" FontSize="12" Margin="0,0,0,12"/>
+
+                            <TextBlock Text="UJP Response" FontWeight="SemiBold" Foreground="#64748B"
+                                       FontSize="12" Margin="0,0,0,4"/>
+                            <Border Background="#F8FAFC" CornerRadius="6" Padding="10" Margin="0,0,0,12">
+                                <SelectableTextBlock Text="{Binding SelectedInvoice.UjpResponse}"
+                                                     TextWrapping="Wrap" FontSize="12" Foreground="#1E293B"/>
+                            </Border>
+
+                            <TextBlock Text="Signed Document (JWS)" FontWeight="SemiBold" Foreground="#64748B"
+                                       FontSize="12" Margin="0,0,0,4"/>
+                            <Border Background="#F8FAFC" CornerRadius="6" Padding="10">
+                                <SelectableTextBlock Text="{Binding SelectedInvoice.SignedJws}"
+                                                     TextWrapping="Wrap" FontSize="11" Foreground="#64748B"
+                                                     MaxHeight="160"/>
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock Text="Select an invoice to see its details."
+                                   Foreground="#94A3B8" FontSize="13"
+                                   IsVisible="{Binding SelectedInvoice, Converter={x:Static converters:ObjectConverters.IsNull}}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
