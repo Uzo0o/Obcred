@@ -47,7 +47,14 @@
 
     <!-- 2. USE STYLES SECOND -->
     <Application.Styles>
-        <FluentTheme />
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <!-- Unifies the Fluent theme's internal "system accent" (used by the Calendar
+                     flyout's selected day, ComboBox's selected/hover item, focus rings, etc.)
+                     with our brand accent, instead of the generic Fluent blue. -->
+                <ColorPaletteResources x:Key="Light" Accent="#2E86FF"/>
+            </FluentTheme.Palettes>
+        </FluentTheme>
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
 
         <!-- ========================================== -->
@@ -166,15 +173,39 @@
             <Setter Property="BorderBrush" Value="{StaticResource BrandAccent}"/>
             <Setter Property="Background" Value="{StaticResource SurfaceWhite}"/>
         </Style>
+        <Style Selector="ComboBox /template/ Border#PopupBorder">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+            <Setter Property="Background" Value="{StaticResource SurfaceWhite}"/>
+            <Setter Property="BoxShadow" Value="0 12 28 -6 #26000000"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
+        <Style Selector="ComboBoxItem">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="2,1"/>
+            <Setter Property="FontSize" Value="13.5"/>
+        </Style>
+        <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentLight}"/>
+        </Style>
+        <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentSoft}"/>
+        </Style>
+        <Style Selector="ComboBoxItem:selected">
+            <Setter Property="Foreground" Value="{StaticResource BrandAccent}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
 
         <Style Selector="DatePicker">
             <Setter Property="Background" Value="{StaticResource InputBackground}"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
             <Setter Property="BorderThickness" Value="1.5"/>
             <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="Foreground" Value="{StaticResource BrandText}"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="MinWidth" Value="0"/>
         </Style>
         <Style Selector="DatePicker:pointerover">
             <Setter Property="BorderBrush" Value="#CBD5E1"/>
@@ -210,6 +241,8 @@
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
@@ -263,6 +296,8 @@
             <Setter Property="Padding" Value="18,0"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
@@ -293,6 +328,8 @@
             <Setter Property="Padding" Value="18,0"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
@@ -313,6 +350,7 @@
             <Setter Property="Padding" Value="10,6"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
@@ -463,12 +501,28 @@
             <Setter Property="Background" Value="{StaticResource InputBackground}"/>
             <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="11.5"/>
-            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="LetterSpacing" Value="0.6"/>
+            <Setter Property="Padding" Value="16,12"/>
+        </Style>
+        <Style Selector="DataGridRow">
+            <Setter Property="MinHeight" Value="48"/>
         </Style>
         <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
             <Setter Property="Fill" Value="{StaticResource InputBackground}"/>
             <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{StaticResource AccentLight}"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="Padding" Value="16,4"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource BrandText}"/>
+        </Style>
+        <Style Selector="DataGridCell:current /template/ Rectangle#FocusVisual">
+            <Setter Property="Stroke" Value="{StaticResource BrandAccent}"/>
         </Style>
 
         <!-- ========================================== -->

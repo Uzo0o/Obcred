@@ -41,21 +41,21 @@
                     <!-- NAV -->
                     <StackPanel Grid.Row="1" Margin="14,10,14,0" Spacing="2">
                         <RadioButton Classes="NavItem" IsChecked="True" Click="NavNewInvoice_Click" GroupName="MainNav">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <PathIcon Data="{StaticResource Document}" Width="16" Height="16"/>
                                 <TextBlock Text="New Invoice" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
                         <RadioButton Classes="NavItem" IsEnabled="False" GroupName="MainNav">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <PathIcon Data="{StaticResource IconUsers}" Width="16" Height="16"/>
                                 <TextBlock Text="Client List" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
 
                         <RadioButton Classes="NavItem" Click="NavHistory_Click" GroupName="MainNav">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <PathIcon Data="{StaticResource IconHistory}" Width="16" Height="16"/>
                                 <TextBlock Text="Invoice History" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -66,7 +66,7 @@
                     <StackPanel Grid.Row="2" Margin="14,0,14,14">
                         <Rectangle Height="1" Width="36" Fill="#334155" HorizontalAlignment="Left" Margin="6,0,0,8"/>
                         <Button Classes="NavItemBtn" Click="OpenSettings_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <PathIcon Data="{StaticResource Settings}" Width="16" Height="16"/>
                                 <TextBlock Text="Settings" VerticalAlignment="Center"/>
                             </StackPanel>

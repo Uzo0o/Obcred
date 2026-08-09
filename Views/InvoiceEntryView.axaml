@@ -27,7 +27,7 @@
                             <Border Classes="CardHeaderAccent"/>
                             <TextBlock Text="Document Details" Classes="CardHeaderStyle" Margin="0"/>
                         </StackPanel>
-                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,*">
 
                             <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,12,14">
                                 <Label Content="Invoice No."/>
@@ -42,13 +42,18 @@
                                 </ComboBox>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,0">
+                            <!-- Dates get a full-width row each: Avalonia's stock DatePicker is a
+                                 3-segment spinner (day/month/year) plus a calendar-toggle button,
+                                 which has a fairly wide intrinsic minimum width that doesn't
+                                 compress well — splitting two of them across one column collided
+                                 and clipped, so each now gets the full card-column width. -->
+                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,14">
                                 <Label Content="Issue Date"/>
-                                <DatePicker SelectedDate="{Binding InvoiceDate}"/>
+                                <DatePicker SelectedDate="{Binding InvoiceDate}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1">
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
                                 <Label Content="Turnover Date"/>
-                                <DatePicker SelectedDate="{Binding TurnoverDate}"/>
+                                <DatePicker SelectedDate="{Binding TurnoverDate}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -86,24 +91,24 @@
                         <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandSuccess}" FontWeight="SemiBold"
                                    TextWrapping="Wrap" FontSize="11" TextAlignment="Center" Height="28"/>
 
-                        <Button Command="{Binding LookupCompanyCommand}" IsEnabled="{Binding IsNotBusy}" Classes="SecondaryActionBtn" HorizontalContentAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                <PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14"/>
-                                <TextBlock Text="Lookup UJP"/>
+                        <Button Command="{Binding LookupCompanyCommand}" IsEnabled="{Binding IsNotBusy}" Classes="SecondaryActionBtn">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconSearch}" Width="16" Height="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="Lookup UJP" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding SavePdfCommand}" IsEnabled="{Binding IsNotBusy}" Classes="SecondaryActionBtn" HorizontalContentAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                <PathIcon Data="{StaticResource IconSave}" Width="14" Height="14"/>
-                                <TextBlock Text="Save PDF"/>
+                        <Button Command="{Binding SavePdfCommand}" IsEnabled="{Binding IsNotBusy}" Classes="SecondaryActionBtn">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconSave}" Width="16" Height="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="Save PDF" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding SubmitInvoiceCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn" HorizontalContentAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                <PathIcon Data="{StaticResource IconSend}" Width="14" Height="14"/>
-                                <TextBlock Text="Submit Invoice"/>
+                        <Button Command="{Binding SubmitInvoiceCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconSend}" Width="18" Height="18" VerticalAlignment="Center"/>
+                                <TextBlock Text="Submit Invoice" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
@@ -123,9 +128,9 @@
                             <TextBlock Text="Line Items" Classes="CardHeaderStyle" Margin="0"/>
                         </StackPanel>
                         <Button Grid.Column="1" Command="{Binding AddBlankItemCommand}" Classes="GhostLinkBtn">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <PathIcon Data="{StaticResource IconPlus}" Width="11" Height="11"/>
-                                <TextBlock Text="Add New Line"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconPlus}" Width="12" Height="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="Add New Line" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </Grid>
@@ -133,7 +138,7 @@
                     <Border Grid.Row="1" CornerRadius="12" BorderBrush="{StaticResource BorderLight}" BorderThickness="1" ClipToBounds="True" Margin="0,0,0,20">
                         <DataGrid ItemsSource="{Binding InvoiceItems}" AutoGenerateColumns="False" BorderThickness="0">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Item Name" Binding="{Binding Desc}" Width="*"/>
+                                <DataGridTextColumn Header="ITEM NAME" Binding="{Binding Desc}" Width="*"/>
 
                                 <DataGridTemplateColumn Header="DDV (%)" Width="110">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -149,9 +154,9 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTextColumn Header="Qty" Binding="{Binding Qty}" Width="80"/>
-                                <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice}" Width="120"/>
-                                <DataGridTextColumn Header="Row Total" Binding="{Binding RowGrossTotal, StringFormat='{}{0:N2}'}" IsReadOnly="True" Width="130"/>
+                                <DataGridTextColumn Header="QTY" Binding="{Binding Qty}" Width="80"/>
+                                <DataGridTextColumn Header="UNIT PRICE" Binding="{Binding UnitPrice}" Width="120"/>
+                                <DataGridTextColumn Header="ROW TOTAL" Binding="{Binding RowGrossTotal, StringFormat='{}{0:N2}'}" IsReadOnly="True" Width="130"/>
 
                                 <DataGridTemplateColumn Header="" Width="50">
                                     <DataGridTemplateColumn.CellTemplate>
