@@ -6,97 +6,104 @@
         x:DataType="vm:InvoiceViewModel"
         Icon="/logo64.ico"
         Title="Obcred"
+        Width="1280" Height="800"
+        MinWidth="1024" MinHeight="640"
         SystemDecorations="None"
         Background="Transparent"
         TransparencyLevelHint="Transparent">
-        
-    <Window.Styles>
-        <Style Selector="Button.WindowControlBtnStyle">
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="Margin" Value="4,0,0,0"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="CornerRadius" Value="6"/>
-        </Style>
 
-        <Style Selector="Button.CyanWindowBtnStyle">
-            <Setter Property="Background" Value="#1B3A6B"/>
-        </Style>
-        <Style Selector="Button.CyanWindowBtnStyle:pointerover">
-            <Setter Property="Background" Value="#4CD3DA"/>
-        </Style>
+    <Border Background="{StaticResource SurfaceWhite}" CornerRadius="16" ClipToBounds="True"
+            BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
+            BoxShadow="0 20 60 -10 #33000000">
+        <Grid ColumnDefinitions="248,*">
 
-        <Style Selector="Button.RedWindowBtnStyle">
-            <Setter Property="Background" Value="#FF6B6B"/>
-        </Style>
-        <Style Selector="Button.RedWindowBtnStyle:pointerover">
-            <Setter Property="Background" Value="#E81123"/>
-        </Style>
-    </Window.Styles>
+            <!-- ============ SIDEBAR ============ -->
+            <Grid Grid.Column="0" Background="{StaticResource SidebarBackground}" RowDefinitions="76,*,Auto">
 
-    <Border Background="White" CornerRadius="24" ClipToBounds="True" BorderBrush="{StaticResource BorderLight}" BorderThickness="1">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="240"/> 
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- SIDEBAR -->
-            <Grid Grid.Column="0" Background="White">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="80"/> 
-                    <RowDefinition Height="*"/>  
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="25,0,0,0">
-                    <TextBlock Text="INTEGRITI" FontWeight="Black" FontSize="20" Foreground="#212529" />
+                <!-- BRAND -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0" Spacing="12">
+                    <Border Width="28" Height="28" CornerRadius="8">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#7AB4FF" Offset="0"/>
+                                <GradientStop Color="#2E86FF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <TextBlock Text="Obcred" FontWeight="Bold" FontSize="19" Foreground="White" LetterSpacing="0.3"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Margin="0,20,0,0">
-                    <!-- Standard RadioButtons; you can style these later using Avalonia's :checked selector -->
-                    <RadioButton Content="New Invoice" Margin="20,5" IsChecked="True" Click="NavNewInvoice_Click"/>
-                    <RadioButton Content="Client List" Margin="20,5" IsEnabled="False"/>
-                    <RadioButton Content="Invoice History" Margin="20,5" Click="NavHistory_Click"/>
-                    <Button Content="⚙ Settings" Margin="20,20,20,5" HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0"
-                            Cursor="Hand" Click="OpenSettings_Click"/>
+                <!-- NAV -->
+                <StackPanel Grid.Row="1" Margin="16,12,16,0" Spacing="2">
+                    <RadioButton Classes="NavItem" IsChecked="True" Click="NavNewInvoice_Click" GroupName="MainNav">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <PathIcon Data="{StaticResource Document}" Width="16" Height="16"/>
+                            <TextBlock Text="New Invoice" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Classes="NavItem" IsEnabled="False" GroupName="MainNav">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <PathIcon Data="{StaticResource IconUsers}" Width="16" Height="16"/>
+                            <TextBlock Text="Client List" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Classes="NavItem" Click="NavHistory_Click" GroupName="MainNav">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <PathIcon Data="{StaticResource IconHistory}" Width="16" Height="16"/>
+                            <TextBlock Text="Invoice History" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+
+                <!-- SETTINGS (bottom) -->
+                <StackPanel Grid.Row="2" Margin="16,0,16,16">
+                    <Rectangle Height="1" Fill="#1E293B" Margin="4,0,4,12"/>
+                    <Button Classes="NavItemBtn" Click="OpenSettings_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <PathIcon Data="{StaticResource Settings}" Width="16" Height="16"/>
+                            <TextBlock Text="Settings" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
 
-            <!-- MAIN CONTENT -->
-            <Grid Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="60"/> 
-                    <RowDefinition Height="*"/>  
-                </Grid.RowDefinitions>
+            <!-- ============ MAIN CONTENT ============ -->
+            <Grid Grid.Column="1" RowDefinitions="56,*">
 
                 <!-- TOP BAR -->
-                <Grid Grid.Row="0" Background="White" PointerPressed="TopBar_PointerPressed">
-                    <Border BorderBrush="#E9ECEF" BorderThickness="0,0,0,1">
-                        <Grid>
-                            <TextBlock Text="Create New Invoice" VerticalAlignment="Center" Margin="30,0,0,0" FontWeight="Bold" Foreground="#212529" FontSize="18"/>
+                <Grid Grid.Row="0" Background="{StaticResource SurfaceWhite}" PointerPressed="TopBar_PointerPressed">
+                    <Border BorderBrush="{StaticResource BorderLight}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="28,0,0,0" Spacing="16">
+                                <TextBlock Text="Create New Invoice" FontWeight="Bold" Foreground="{StaticResource BrandText}" FontSize="16"/>
 
-                            <!-- ENVIRONMENT BANNER -->
-                            <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Border IsVisible="{Binding IsTest}" Background="#DCFCE7" CornerRadius="6" Padding="12,4">
-                                    <TextBlock Text="{Binding EnvironmentBanner}" FontWeight="Bold" FontSize="13" Foreground="#059669"/>
+                                <Border IsVisible="{Binding IsTest}" Classes="BannerSuccess">
+                                    <TextBlock Text="{Binding EnvironmentBanner}" FontWeight="Bold" FontSize="12" Foreground="#059669"/>
                                 </Border>
-                                <Border IsVisible="{Binding IsProduction}" Background="#FEE2E2" CornerRadius="6" Padding="12,4">
-                                    <TextBlock Text="{Binding EnvironmentBanner}" FontWeight="Bold" FontSize="13" Foreground="#DC2626"/>
+                                <Border IsVisible="{Binding IsProduction}" Classes="BannerDanger">
+                                    <TextBlock Text="{Binding EnvironmentBanner}" FontWeight="Bold" FontSize="12" Foreground="#DC2626"/>
                                 </Border>
-                            </Panel>
+                            </StackPanel>
 
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,15,0" VerticalAlignment="Center">
-                                <Button Click="Minimize_Click" Classes="WindowControlBtnStyle CyanWindowBtnStyle" Content="-"/>
-                                <Button Click="Maximize_Click" Classes="WindowControlBtnStyle CyanWindowBtnStyle" Content="[ ]"/>
-                                <Button Click="Close_Click" Classes="WindowControlBtnStyle RedWindowBtnStyle" Content="X" Margin="24,0,0,0"/> 
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,14,0" VerticalAlignment="Center" Spacing="0">
+                                <Button Click="Minimize_Click" Classes="WindowControlBtnStyle CyanWindowBtnStyle">
+                                    <PathIcon Data="{StaticResource Minimize}" Width="10" Height="10"/>
+                                </Button>
+                                <Button Click="Maximize_Click" Classes="WindowControlBtnStyle CyanWindowBtnStyle">
+                                    <PathIcon Data="{StaticResource Expand}" Width="11" Height="11"/>
+                                </Button>
+                                <Button Click="Close_Click" Classes="WindowControlBtnStyle RedWindowBtnStyle" Margin="16,0,0,0">
+                                    <PathIcon Data="{StaticResource Close}" Width="10" Height="10"/>
+                                </Button>
                             </StackPanel>
                         </Grid>
                     </Border>
                 </Grid>
 
                 <!-- VIEW CONTAINER -->
-                <Grid Grid.Row="1" Background="#E1EBF9">
+                <Grid Grid.Row="1" Background="{StaticResource BrandBackground}">
                     <ContentControl x:Name="PageHost"/>
                 </Grid>
             </Grid>

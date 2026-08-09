@@ -7,182 +7,191 @@
              x:DataType="viewModels:InvoiceViewModel"
              x:Class="Obcred.Views.InvoiceEntryView"
              xmlns:viewModels="clr-namespace:Obcred.ViewModels">
-    
-    <Grid Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> 
-            <RowDefinition Height="Auto"/> 
-            <RowDefinition Height="*"/>    
-        </Grid.RowDefinitions>
 
-        <!-- PAGE TITLE: Replaced Style with Classes -->
-        <TextBlock Grid.Row="0" Text="Create Invoice" Classes="PageTitleStyle"/>
+    <ScrollViewer>
+        <Grid Classes="PageRoot" Margin="28,24,28,28" RowDefinitions="Auto,Auto,Auto">
+            <Grid.RenderTransform>
+                <TranslateTransform/>
+            </Grid.RenderTransform>
 
-        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,20" BoxShadow="0 2 10 0 #08000000">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2.5*"/>
-                    <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="180"/>
-                </Grid.ColumnDefinitions>
+            <!-- PAGE TITLE -->
+            <TextBlock Grid.Row="0" Text="Create Invoice" Classes="PageTitleStyle"/>
 
-                <!-- 1. DOCUMENT DETAILS -->
-                <StackPanel Grid.Column="0" Margin="0,0,24,0">
-                    <TextBlock Text="Document Details" Classes="CardHeaderStyle"/>
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+            <!-- ================= CARD 1: DETAILS + BUYER + ACTIONS ================= -->
+            <Border Grid.Row="1" Classes="Card" Margin="0,0,0,20">
+                <Grid ColumnDefinitions="2.3*,3*,190">
 
-                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,12,12">
-                            <Label Content="Invoice No."/>
-                            <TextBox Text="{Binding InvoiceNumber}" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"/>
+                    <!-- 1. DOCUMENT DETAILS -->
+                    <StackPanel Grid.Column="0" Margin="0,0,28,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Border Classes="CardHeaderAccent"/>
+                            <TextBlock Text="Document Details" Classes="CardHeaderStyle" Margin="0"/>
                         </StackPanel>
-                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
-                            <Label Content="Doc Type"/>
-                            <ComboBox SelectedValueBinding="{Binding SelectedDocumentType}" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
-                                <ComboBoxItem Content="100" Tag="100" IsSelected="True"/>
-                                <ComboBoxItem Content="380" Tag="380"/>
-                                <ComboBoxItem Content="383" Tag="383"/>
-                            </ComboBox>
-                        </StackPanel>
-                        
-                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,0">
-                            <Label Content="Issue Date"/>
-                            <DatePicker SelectedDate="{Binding InvoiceDate}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="1">
-                            <Label Content="Turnover Date"/>
-                            <DatePicker SelectedDate="{Binding TurnoverDate}"/>
-                        </StackPanel>
-                    </Grid>
-                </StackPanel>
+                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*">
 
-                <!-- 2. BUYER INFORMATION -->
-                <StackPanel Grid.Column="1" Margin="0,0,24,0">
-                    <TextBlock Text="Buyer Information" Classes="CardHeaderStyle"/>
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.5*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,12,14">
+                                <Label Content="Invoice No."/>
+                                <TextBox Text="{Binding InvoiceNumber}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,14">
+                                <Label Content="Doc Type"/>
+                                <ComboBox SelectedValueBinding="{Binding SelectedDocumentType}">
+                                    <ComboBoxItem Content="100" Tag="100" IsSelected="True"/>
+                                    <ComboBoxItem Content="380" Tag="380"/>
+                                    <ComboBoxItem Content="383" Tag="383"/>
+                                </ComboBox>
+                            </StackPanel>
 
-                        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,12,12">
-                            <Label Content="Select Saved Client"/>
-                            <ComboBox ItemsSource="{Binding AllClients}" SelectedItem="{Binding SelectedClient}" DisplayMemberBinding="{Binding Name}" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"/>
-                        </StackPanel>
-                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,12">
-                            <Label Content="EDB (Tax No.)"/>
-                            <TextBox Text="{Binding BuyerEdb}" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,12,0">
-                            <Label Content="Official Name"/>
-                            <TextBox Text="{Binding BuyerName}" IsReadOnly="True" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1"/>
-                        </StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="2">
-                            <Label Content="City"/>
-                            <TextBox Text="{Binding SelectedClient.City}" IsReadOnly="True" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1"/>
-                        </StackPanel>
-                    </Grid>
-                </StackPanel>
-
-                <!-- 3. ACTIONS -->
-                <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="#10B981" FontWeight="Bold" Margin="0,0,0,8" TextWrapping="Wrap" FontSize="11" TextAlignment="Center" Height="28"/>
-                    <Button Content="Lookup UJP" Command="{Binding LookupCompanyCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn" Background="#E2E8F0" Foreground="#1E293B" Margin="0,0,0,12"/>
-                    <Button Content="Save PDF" Command="{Binding SavePdfCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn" Background="#E2E8F0" Foreground="#1E293B" Margin="0,0,0,12"/>
-                    <Button Content="Submit Invoice" Command="{Binding SubmitInvoiceCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn"/>
-                    <ProgressBar IsIndeterminate="True" Height="4" Margin="0,8,0,0" IsVisible="{Binding IsBusy}" Foreground="#3B82F6"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- BOTTOM CARD -->
-        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="20" BoxShadow="0 2 10 0 #08000000">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/> 
-                    <RowDefinition Height="*"/>    
-                    <RowDefinition Height="Auto"/> 
-                </Grid.RowDefinitions>
-
-                <Grid Grid.Row="0" Margin="0,0,0,12">
-                    <TextBlock Text="Line Items" Classes="CardHeaderStyle" Margin="0"/>
-                    <Button Content="+ Add New Line" Command="{Binding AddBlankItemCommand}" Background="Transparent" Foreground="#3B82F6" FontWeight="SemiBold" HorizontalAlignment="Right" BorderThickness="0" Cursor="Hand"/>
-                </Grid>
-
-                <!-- Removed CanUserAddRows="False" -->
-                <DataGrid Grid.Row="1" ItemsSource="{Binding InvoiceItems}" AutoGenerateColumns="False" Margin="0,0,0,16" BorderThickness="1" BorderBrush="#E2E8F0">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Item Name" Binding="{Binding Desc}" Width="*"/>
-                        
-                        <!-- Fixed x:Array initialization -->
-                        <DataGridTemplateColumn Header="DDV (%)" Width="100">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <ComboBox SelectedItem="{Binding TaxIndicator}"
-                                              ItemsSource="{x:Static models:VatRates.DisplayNames}"
-                                              HorizontalAlignment="Stretch"
-                                              VerticalAlignment="Center"
-                                              Background="Transparent"
-                                              BorderThickness="0"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <DataGridTextColumn Header="Qty" Binding="{Binding Qty}" Width="80"/>
-                        <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice}" Width="120"/>
-                        <DataGridTextColumn Header="Row Total" Binding="{Binding RowGrossTotal, StringFormat='{}{0:N2}'}" IsReadOnly="True" Width="120"/>
-
-                        <DataGridTemplateColumn Header="" Width="46">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button Content="✕"
-                                            Command="{Binding $parent[DataGrid].((viewModels:InvoiceViewModel)DataContext).RemoveItemCommand}"
-                                            CommandParameter="{Binding}"
-                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                            Foreground="#DC2626" FontWeight="Bold"
-                                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                                            ToolTip.Tip="Remove this line"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <!-- Totals Footer -->
-                <Grid Grid.Row="2">
-                    <StackPanel HorizontalAlignment="Right" Width="260">
-                        <Grid Margin="0,0,0,8">
-                            <TextBlock Text="Subtotal:" Foreground="#64748B" FontSize="13"/>
-                            <TextBlock Text="{Binding NetAmount, StringFormat='{}{0:N2} MKD'}" FontWeight="SemiBold" Foreground="#1E293B" HorizontalAlignment="Right" FontSize="13"/>
-                        </Grid>
-                        
-                        <Grid Margin="0,0,0,12">
-                            <TextBlock Text="Total DDV:" Foreground="#64748B" FontSize="13"/>
-                            <TextBlock Text="{Binding VatAmount, StringFormat='{}{0:N2} MKD'}" FontWeight="SemiBold" Foreground="#1E293B" HorizontalAlignment="Right" FontSize="13"/>
-                        </Grid>
-                        
-                        <Rectangle Height="1" Fill="#E2E8F0" Margin="0,0,0,12"/>
-                        
-                        <Grid>
-                            <TextBlock Text="Full Price:" FontWeight="Bold" Foreground="#0F172A" FontSize="16" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding GrossAmount, StringFormat='{}{0:N2} MKD'}" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Right" FontSize="20"/>
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,0">
+                                <Label Content="Issue Date"/>
+                                <DatePicker SelectedDate="{Binding InvoiceDate}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1">
+                                <Label Content="Turnover Date"/>
+                                <DatePicker SelectedDate="{Binding TurnoverDate}"/>
+                            </StackPanel>
                         </Grid>
                     </StackPanel>
+
+                    <!-- 2. BUYER INFORMATION -->
+                    <StackPanel Grid.Column="1" Margin="0,0,28,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Border Classes="CardHeaderAccent"/>
+                            <TextBlock Text="Buyer Information" Classes="CardHeaderStyle" Margin="0"/>
+                        </StackPanel>
+                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="1.5*,*,*">
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,12,14">
+                                <Label Content="Select Saved Client"/>
+                                <ComboBox ItemsSource="{Binding AllClients}" SelectedItem="{Binding SelectedClient}" DisplayMemberBinding="{Binding Name}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,14">
+                                <Label Content="EDB (Tax No.)"/>
+                                <TextBox Text="{Binding BuyerEdb}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,12,0">
+                                <Label Content="Official Name"/>
+                                <TextBox Text="{Binding BuyerName}" IsReadOnly="True" Classes="ReadOnlyField"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="2">
+                                <Label Content="City"/>
+                                <TextBox Text="{Binding SelectedClient.City}" IsReadOnly="True" Classes="ReadOnlyField"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- 3. ACTIONS -->
+                    <StackPanel Grid.Column="2" VerticalAlignment="Bottom" Spacing="12">
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandSuccess}" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" FontSize="11" TextAlignment="Center" Height="28"/>
+
+                        <Button Command="{Binding LookupCompanyCommand}" IsEnabled="{Binding IsNotBusy}" Classes="SecondaryActionBtn" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14"/>
+                                <TextBlock Text="Lookup UJP"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SavePdfCommand}" IsEnabled="{Binding IsNotBusy}" Classes="SecondaryActionBtn" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconSave}" Width="14" Height="14"/>
+                                <TextBlock Text="Save PDF"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SubmitInvoiceCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn" HorizontalContentAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconSend}" Width="14" Height="14"/>
+                                <TextBlock Text="Submit Invoice"/>
+                            </StackPanel>
+                        </Button>
+
+                        <ProgressBar IsIndeterminate="True" Height="4" CornerRadius="2" Margin="0,4,0,0"
+                                     IsVisible="{Binding IsBusy}" Foreground="{StaticResource BrandAccent}"/>
+                    </StackPanel>
                 </Grid>
-            </Grid>
-        </Border>
-    </Grid>
+            </Border>
+
+            <!-- ================= CARD 2: LINE ITEMS ================= -->
+            <Border Grid.Row="2" Classes="Card">
+                <Grid RowDefinitions="Auto,Auto,Auto">
+
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <Border Classes="CardHeaderAccent"/>
+                            <TextBlock Text="Line Items" Classes="CardHeaderStyle" Margin="0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Command="{Binding AddBlankItemCommand}" Classes="GhostLinkBtn">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <PathIcon Data="{StaticResource IconPlus}" Width="11" Height="11"/>
+                                <TextBlock Text="Add New Line"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <Border Grid.Row="1" CornerRadius="12" BorderBrush="{StaticResource BorderLight}" BorderThickness="1" ClipToBounds="True" Margin="0,0,0,20">
+                        <DataGrid ItemsSource="{Binding InvoiceItems}" AutoGenerateColumns="False" BorderThickness="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Item Name" Binding="{Binding Desc}" Width="*"/>
+
+                                <DataGridTemplateColumn Header="DDV (%)" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox SelectedItem="{Binding TaxIndicator}"
+                                                      ItemsSource="{x:Static models:VatRates.DisplayNames}"
+                                                      HorizontalAlignment="Stretch"
+                                                      VerticalAlignment="Center"
+                                                      Background="Transparent"
+                                                      BorderThickness="0"
+                                                      Margin="6,4"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Qty" Binding="{Binding Qty}" Width="80"/>
+                                <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice}" Width="120"/>
+                                <DataGridTextColumn Header="Row Total" Binding="{Binding RowGrossTotal, StringFormat='{}{0:N2}'}" IsReadOnly="True" Width="130"/>
+
+                                <DataGridTemplateColumn Header="" Width="50">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Classes="IconGhostBtn"
+                                                    Command="{Binding $parent[DataGrid].((viewModels:InvoiceViewModel)DataContext).RemoveItemCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                    ToolTip.Tip="Remove this line">
+                                                <PathIcon Data="{StaticResource Close}" Width="11" Height="11"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- TOTALS -->
+                    <Grid Grid.Row="2">
+                        <Border HorizontalAlignment="Right" Width="300" Classes="TotalsBox">
+                            <StackPanel Spacing="12">
+                                <Grid>
+                                    <TextBlock Text="Sub Total:" Classes="TotalLabel"/>
+                                    <TextBlock Text="{Binding NetAmount, StringFormat='{}{0:N2} MKD'}" Classes="TotalValue" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="Total DDV:" Classes="TotalLabel"/>
+                                    <TextBlock Text="{Binding VatAmount, StringFormat='{}{0:N2} MKD'}" Classes="TotalValue" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Rectangle Height="1" Fill="{StaticResource BorderLight}"/>
+                                <Grid>
+                                    <TextBlock Text="Full Price:" Classes="TotalFinalLabel" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding GrossAmount, StringFormat='{}{0:N2} MKD'}" Classes="TotalFinalValue" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </UserControl>
