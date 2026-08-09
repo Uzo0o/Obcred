@@ -13,61 +13,67 @@
         TransparencyLevelHint="Transparent">
 
     <Border Background="{StaticResource SurfaceWhite}" CornerRadius="16" ClipToBounds="True"
-            BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
             BoxShadow="0 20 60 -10 #33000000">
-        <Grid ColumnDefinitions="248,*">
+        <Grid ColumnDefinitions="232,*">
 
             <!-- ============ SIDEBAR ============ -->
-            <Grid Grid.Column="0" Background="{StaticResource SidebarBackground}" RowDefinitions="76,*,Auto">
+            <!-- Its own Border with matching left-side corner radius: relying only on the outer
+                 Border's clip for rounded corners leaves a sliver where the flat-cornered content
+                 doesn't quite match the outer clip's radius (Avalonia clipping quirk with
+                 BorderThickness), so the sidebar carries its own rounding instead. -->
+            <Border Grid.Column="0" Background="{StaticResource SidebarBackground}"
+                    CornerRadius="16,0,0,16" ClipToBounds="True">
+                <Grid RowDefinitions="72,*,Auto">
 
-                <!-- BRAND -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0" Spacing="12">
-                    <Border Width="28" Height="28" CornerRadius="8">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#7AB4FF" Offset="0"/>
-                                <GradientStop Color="#2E86FF" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                    </Border>
-                    <TextBlock Text="Obcred" FontWeight="Bold" FontSize="19" Foreground="White" LetterSpacing="0.3"/>
-                </StackPanel>
+                    <!-- BRAND -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0,0,0" Spacing="12">
+                        <Border Width="26" Height="26" CornerRadius="8">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Color="#7AB4FF" Offset="0"/>
+                                    <GradientStop Color="#2E86FF" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <TextBlock Text="Obcred" FontWeight="Bold" FontSize="18" Foreground="White" LetterSpacing="0.3"/>
+                    </StackPanel>
 
-                <!-- NAV -->
-                <StackPanel Grid.Row="1" Margin="16,12,16,0" Spacing="2">
-                    <RadioButton Classes="NavItem" IsChecked="True" Click="NavNewInvoice_Click" GroupName="MainNav">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <PathIcon Data="{StaticResource Document}" Width="16" Height="16"/>
-                            <TextBlock Text="New Invoice" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
+                    <!-- NAV -->
+                    <StackPanel Grid.Row="1" Margin="14,10,14,0" Spacing="2">
+                        <RadioButton Classes="NavItem" IsChecked="True" Click="NavNewInvoice_Click" GroupName="MainNav">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <PathIcon Data="{StaticResource Document}" Width="16" Height="16"/>
+                                <TextBlock Text="New Invoice" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
 
-                    <RadioButton Classes="NavItem" IsEnabled="False" GroupName="MainNav">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <PathIcon Data="{StaticResource IconUsers}" Width="16" Height="16"/>
-                            <TextBlock Text="Client List" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
+                        <RadioButton Classes="NavItem" IsEnabled="False" GroupName="MainNav">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <PathIcon Data="{StaticResource IconUsers}" Width="16" Height="16"/>
+                                <TextBlock Text="Client List" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
 
-                    <RadioButton Classes="NavItem" Click="NavHistory_Click" GroupName="MainNav">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <PathIcon Data="{StaticResource IconHistory}" Width="16" Height="16"/>
-                            <TextBlock Text="Invoice History" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-                </StackPanel>
+                        <RadioButton Classes="NavItem" Click="NavHistory_Click" GroupName="MainNav">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <PathIcon Data="{StaticResource IconHistory}" Width="16" Height="16"/>
+                                <TextBlock Text="Invoice History" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
 
-                <!-- SETTINGS (bottom) -->
-                <StackPanel Grid.Row="2" Margin="16,0,16,16">
-                    <Rectangle Height="1" Fill="#1E293B" Margin="4,0,4,12"/>
-                    <Button Classes="NavItemBtn" Click="OpenSettings_Click">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <PathIcon Data="{StaticResource Settings}" Width="16" Height="16"/>
-                            <TextBlock Text="Settings" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Grid>
+                    <!-- SETTINGS (bottom) -->
+                    <StackPanel Grid.Row="2" Margin="14,0,14,14">
+                        <Rectangle Height="1" Width="36" Fill="#334155" HorizontalAlignment="Left" Margin="6,0,0,8"/>
+                        <Button Classes="NavItemBtn" Click="OpenSettings_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <PathIcon Data="{StaticResource Settings}" Width="16" Height="16"/>
+                                <TextBlock Text="Settings" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
             <!-- ============ MAIN CONTENT ============ -->
             <Grid Grid.Column="1" RowDefinitions="56,*">
