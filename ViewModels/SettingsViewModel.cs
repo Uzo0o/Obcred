@@ -100,16 +100,17 @@ public partial class SettingsViewModel : ObservableObject
         {
             StatusMessage = "Applying certificate to system...";
 
-            var initialSettings = new UserSettings
-            {
-                CertPath = CertPath,
-                CertPassword = CertPassword,
-                CertThumbprint = CertThumbprint,
-                EujpId = EujpId,
-                SellerEdb = SellerEdb,
-                InvoiceNumberPrefix = InvoiceNumberPrefix,
-                UseProductionEnvironment = UseProductionEnvironment
-            };
+            // Seed from the CURRENT settings (not a blank object) so fields this screen
+            // doesn't own — like the PDF template/logo chosen on the PDF Template
+            // screen — survive a re-save here instead of being silently reset.
+            var initialSettings = _settingsService.CurrentSettings;
+            initialSettings.CertPath = CertPath;
+            initialSettings.CertPassword = CertPassword;
+            initialSettings.CertThumbprint = CertThumbprint;
+            initialSettings.EujpId = EujpId;
+            initialSettings.SellerEdb = SellerEdb;
+            initialSettings.InvoiceNumberPrefix = InvoiceNumberPrefix;
+            initialSettings.UseProductionEnvironment = UseProductionEnvironment;
             _settingsService.SaveSettings(initialSettings);
 
             StatusMessage = "Verifying company with UJP...";

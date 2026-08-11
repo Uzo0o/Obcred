@@ -133,6 +133,58 @@ public class UjpService : IUjpService
             SignedJws = signedJws
         };
     }
+    // Incoming ("влезни") invoices: everything other companies have sent TO us.
+    // No signed body needed for reading — but UJP still requires the JWS transport cert
+    // and the X-SERIAL-NUMBER header for every /documents/* call, same as sending.
+    public async Task<List<PurchaseInvoiceStatusDto>> GetPurchaseInvoicesStatusAsync(DateTime dateFrom, DateTime dateTo)
+    {
+        var settings = _settingsService.CurrentSettings;
+
+        string officialTimestamp = await GetServerTimestampAsync();
+        var requestBody = new
+        {
+            requestTimestamp = officialTimestamp,
+            dateFrom = dateFrom.ToString("yyyy-MM-dd"),
+            dateTo = dateTo.ToString("yyyy-MM-dd")
+        };
+
+        var jsonOptions = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
+        string jsonString = JsonSerializer.Serialize(requestBody, jsonOptions);
+
+        using X509Certificate2 cert = GetUserCertificate();
+        string signedJws = SignPayload(jsonString, cert);
+
+        var handler = new HttpClientHandler();
+        handler.ClientCertificates.Add(cert);
+
+        using var client = new HttpClient(handler);
+        client.BaseAddress = new Uri(BaseUrl);
+
+        client.DefaultRequestHeaders.Clear();
+        client.DefaultRequestHeaders.Add("X-EDB", settings.SellerEdb);
+        client.DefaultRequestHeaders.Add("X-EUJP-ID", settings.EujpId);
+        client.DefaultRequestHeaders.Add("X-SERIAL-NUMBER", GetCorrectSerialNumber(cert));
+
+        var wrapper = new { jws = signedJws };
+        var content = new StringContent(JsonSerializer.Serialize(wrapper), Encoding.UTF8, "application/json");
+
+        const string endpoint = "/einvoice_api/api/v1/documents/purchase-invoice/invoices-status";
+        var response = await client.PostAsync(endpoint, content);
+
+        byte[] contentBytes = await response.Content.ReadAsByteArrayAsync();
+        string responseText = Encoding.UTF8.GetString(contentBytes);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception($"UJP purchase-invoice lookup failed ({(int)response.StatusCode}): {responseText}");
+        }
+
+        var wrapperResponse = JsonSerializer.Deserialize<PurchaseInvoiceStatusResponse>(
+            responseText, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        return wrapperResponse?.Invoices ?? new List<PurchaseInvoiceStatusDto>();
+    }
+
     private static string GetCorrectSerialNumber(X509Certificate2 cert)
     {
         string hex = cert.SerialNumber; // already in the correct byte order

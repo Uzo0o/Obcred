@@ -1,0 +1,167 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:Obcred.ViewModels"
+             xmlns:converters="using:Avalonia.Data.Converters"
+             x:DataType="viewModels:ClientsViewModel"
+             x:Class="Obcred.Views.ClientsView">
+
+    <Grid Classes="PageRoot" Margin="28,24,28,28" RowDefinitions="Auto,*">
+        <Grid.RenderTransform>
+            <TranslateTransform/>
+        </Grid.RenderTransform>
+
+        <!-- TITLE + REFRESH -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+            <TextBlock Grid.Column="0" Text="Client List" Classes="PageTitleStyle" Margin="0"/>
+            <Button Grid.Column="1" Command="{Binding LoadCommand}" IsEnabled="{Binding IsNotBusy}" Classes="PrimaryActionBtn" VerticalAlignment="Top">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <PathIcon Data="{StaticResource IconHistory}" Width="15" Height="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- LIST + DETAIL -->
+        <Grid Grid.Row="1" ColumnDefinitions="1.15*,1.6*">
+
+            <!-- LEFT: searchable client list -->
+            <Border Grid.Column="0" Classes="Card" Padding="16" Margin="0,0,16,0">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                 Watermark="Search by name or EDB..."/>
+                        <PathIcon Data="{StaticResource IconSearch}" Width="14" Height="14"
+                                  Foreground="{StaticResource TextMuted}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"
+                                  IsHitTestVisible="False"/>
+                    </Grid>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Clients}"
+                              SelectedItem="{Binding SelectedClient}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="NAME" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="EDB" Binding="{Binding Edb}" Width="110"/>
+                            <DataGridTextColumn Header="CITY" Binding="{Binding City}" Width="110"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="1" Text="No saved clients yet. They'll appear here once you look one up on the Invoice screen."
+                               Foreground="#94A3B8" FontSize="13" TextWrapping="Wrap" TextAlignment="Center"
+                               VerticalAlignment="Center" Margin="20,0"
+                               IsVisible="{Binding !HasClients}"/>
+                </Grid>
+            </Border>
+
+            <!-- RIGHT: selected client's details + their invoice history -->
+            <Border Grid.Column="1" Classes="Card">
+                <Panel>
+                <Grid IsVisible="{Binding SelectedClient, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
+                      RowDefinitions="Auto,Auto,Auto,*">
+
+                    <!-- Client identity -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                        <Border Classes="CardHeaderAccent"/>
+                        <TextBlock Text="{Binding SelectedClient.Name}" Classes="CardHeaderStyle" Margin="0" FontSize="18"/>
+                    </StackPanel>
+
+                    <!-- Contact / registration details -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*,*" Margin="0,0,0,18">
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <Label Content="EDB (Tax No.)"/>
+                            <TextBlock Text="{Binding SelectedClient.Edb}" FontWeight="SemiBold" Foreground="{StaticResource BrandText}" FontSize="13.5"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                            <Label Content="VAT Number"/>
+                            <TextBlock Text="{Binding SelectedClient.VatNumber}" FontWeight="SemiBold" Foreground="{StaticResource BrandText}" FontSize="13.5"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <Label Content="Country"/>
+                            <TextBlock Text="{Binding SelectedClient.CountryCode}" FontWeight="SemiBold" Foreground="{StaticResource BrandText}" FontSize="13.5"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*,*" Margin="0,0,0,20">
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <Label Content="Street"/>
+                            <TextBlock Text="{Binding SelectedClient.Street}" FontWeight="SemiBold" Foreground="{StaticResource BrandText}" FontSize="13.5"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                            <Label Content="No."/>
+                            <TextBlock Text="{Binding SelectedClient.Number}" FontWeight="SemiBold" Foreground="{StaticResource BrandText}" FontSize="13.5"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <Label Content="City / Zip"/>
+                            <TextBlock FontWeight="SemiBold" Foreground="{StaticResource BrandText}" FontSize="13.5">
+                                <Run Text="{Binding SelectedClient.City}"/>
+                                <Run Text=", "/>
+                                <Run Text="{Binding SelectedClient.Zip}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Invoice history for this client -->
+                    <Grid Grid.Row="3" RowDefinitions="Auto,Auto,*">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <Border Classes="CardHeaderAccent"/>
+                                <TextBlock Text="Invoice History" Classes="CardHeaderStyle" Margin="0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Quick stats -->
+                        <Grid Grid.Row="1" ColumnDefinitions="*,*" Margin="0,0,0,14">
+                            <Border Grid.Column="0" Classes="TotalsBox" Margin="0,0,8,0" Padding="14,12">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="TOTAL INVOICES" Classes="TotalLabel" FontSize="10.5" LetterSpacing="0.5"/>
+                                    <TextBlock Text="{Binding TotalInvoiceCount}" FontWeight="Bold" FontSize="20" Foreground="{StaticResource BrandText}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Classes="TotalsBox" Margin="8,0,0,0" Padding="14,12">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="TOTAL INVOICED" Classes="TotalLabel" FontSize="10.5" LetterSpacing="0.5"/>
+                                    <TextBlock Text="{Binding TotalInvoicedAmount, StringFormat='{}{0:N2} MKD'}" FontWeight="Bold" FontSize="20" Foreground="{StaticResource BrandAccent}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Grid.Row="2" CornerRadius="12" BorderBrush="{StaticResource BorderLight}" BorderThickness="1" ClipToBounds="True">
+                            <Grid>
+                                <DataGrid ItemsSource="{Binding ClientInvoices}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          GridLinesVisibility="Horizontal"
+                                          BorderThickness="0">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="INVOICE NO." Binding="{Binding DocNumber}" Width="*"/>
+                                        <DataGridTextColumn Header="DATE" Binding="{Binding IssueDate}" Width="110"/>
+                                        <DataGridTextColumn Header="TOTAL" Binding="{Binding GrossAmount, StringFormat='{}{0:N2}'}" Width="120"/>
+                                        <DataGridTextColumn Header="STATUS" Binding="{Binding Status}" Width="90"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock Text="No invoices sent to this client yet."
+                                           Foreground="#94A3B8" FontSize="13"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           IsVisible="{Binding !HasClientInvoices}"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- Empty state: nothing selected yet -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
+                            IsVisible="{Binding SelectedClient, Converter={x:Static converters:ObjectConverters.IsNull}}">
+                    <PathIcon Data="{StaticResource IconUsers}" Width="32" Height="32" Foreground="#CBD5E1" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Select a client to see their details and invoice history."
+                               Foreground="#94A3B8" FontSize="13" TextAlignment="Center"/>
+                </StackPanel>
+                </Panel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

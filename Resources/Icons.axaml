@@ -36,4 +36,10 @@
 
     <!-- Plus / Add -->
     <Geometry x:Key="IconPlus">M10,2 H14 V10 H22 V14 H14 V22 H10 V14 H2 V10 H10 Z</Geometry>
+
+    <!-- Inbox / Received -->
+    <Geometry x:Key="IconInbox">M11,2 H13 V13 H11 Z M6,12 L18,12 L12,19 Z M3,20 H21 V22 H3 Z</Geometry>
+
+    <!-- Layout / Template -->
+    <Geometry x:Key="IconLayout">M3,3 H21 V8 H3 Z M3,10 H11 V21 H3 Z M13,10 H21 V21 H13 Z</Geometry>
 </ResourceDictionary>

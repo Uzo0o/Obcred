@@ -37,6 +37,26 @@ public partial class MainWindow : Window
         PageHost.Content = new InvoiceHistoryView { DataContext = historyViewModel };
     }
 
+    private async void NavClientList_Click(object? sender, RoutedEventArgs e)
+    {
+        var clientsViewModel = App.AppHost!.Services.GetRequiredService<ClientsViewModel>();
+        await clientsViewModel.LoadAsync();
+        PageHost.Content = new ClientsView { DataContext = clientsViewModel };
+    }
+
+    private async void NavReceivedInvoices_Click(object? sender, RoutedEventArgs e)
+    {
+        var purchaseInvoicesViewModel = App.AppHost!.Services.GetRequiredService<PurchaseInvoicesViewModel>();
+        await purchaseInvoicesViewModel.LoadFromCacheAsync();
+        PageHost.Content = new PurchaseInvoicesView { DataContext = purchaseInvoicesViewModel };
+    }
+
+    private void NavPdfTemplate_Click(object? sender, RoutedEventArgs e)
+    {
+        var pdfSettingsViewModel = App.AppHost!.Services.GetRequiredService<PdfSettingsViewModel>();
+        PageHost.Content = new PdfSettingsView { DataContext = pdfSettingsViewModel };
+    }
+
     private async void OpenSettings_Click(object? sender, RoutedEventArgs e)
     {
         var services = App.AppHost!.Services;

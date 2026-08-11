@@ -43,6 +43,9 @@ public partial class App : Application
                     services.AddSingleton<MainWindow>();
                     services.AddSingleton<InvoiceViewModel>();
                     services.AddSingleton<HistoryViewModel>();
+                    services.AddSingleton<ClientsViewModel>();
+                    services.AddSingleton<PurchaseInvoicesViewModel>();
+                    services.AddSingleton<PdfSettingsViewModel>();
                 })
                 .Build();
 

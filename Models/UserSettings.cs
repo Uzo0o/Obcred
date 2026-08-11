@@ -13,6 +13,11 @@ public class UserSettings
 
     // When false (default) the app talks to the UJP TEST sandbox; when true, to LIVE production.
     public bool UseProductionEnvironment { get; set; } = false;
+
+    // PDF branding: which built-in layout to render with, and an optional logo file
+    // (a local copy under our AppData folder, so it survives the original being moved/deleted).
+    public string PdfTemplate { get; set; } = "Classic";
+    public string PdfLogoPath { get; set; } = string.Empty;
     
     // Cached UJP Data
     public string SellerName { get; set; } = string.Empty;

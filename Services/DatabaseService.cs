@@ -27,6 +27,7 @@ public class DatabaseService : IDatabaseService
         _db.CreateTableAsync<ClientRecord>().Wait();
         _db.CreateTableAsync<InvoiceRecord>().Wait();
         _db.CreateTableAsync<InvoiceSequence>().Wait();
+        _db.CreateTableAsync<PurchaseInvoiceRecord>().Wait();
     }
 
     public async Task SaveClientAsync(ClientRecord client)
@@ -70,6 +71,35 @@ public class DatabaseService : IDatabaseService
     public async Task<InvoiceRecord> GetInvoiceByIdAsync(int id)
     {
         return await _db.Table<InvoiceRecord>().FirstOrDefaultAsync(i => i.Id == id);
+    }
+
+    public async Task SavePurchaseInvoiceAsync(PurchaseInvoiceRecord invoice)
+    {
+        // Keyed by Euid: InsertOrReplace ensures a re-sync from UJP updates the cached
+        // status/amounts without needing to touch the locally-tracked IsPaid flag —
+        // the caller is responsible for carrying that value over before calling this.
+        await _db.InsertOrReplaceAsync(invoice);
+    }
+
+    public async Task<List<PurchaseInvoiceRecord>> GetAllPurchaseInvoicesAsync()
+    {
+        return await _db.Table<PurchaseInvoiceRecord>()
+            .OrderByDescending(i => i.DocDate)
+            .ToListAsync();
+    }
+
+    public async Task<PurchaseInvoiceRecord?> GetPurchaseInvoiceByEuidAsync(string euid)
+    {
+        return await _db.Table<PurchaseInvoiceRecord>().FirstOrDefaultAsync(i => i.Euid == euid);
+    }
+
+    public async Task SetPurchaseInvoicePaidAsync(string euid, bool isPaid)
+    {
+        var record = await GetPurchaseInvoiceByEuidAsync(euid);
+        if (record == null) return;
+
+        record.IsPaid = isPaid;
+        await _db.UpdateAsync(record);
     }
 
     public async Task<int> PeekNextInvoiceSeqAsync(int year)

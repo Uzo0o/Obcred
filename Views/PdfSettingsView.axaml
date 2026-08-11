@@ -1,0 +1,122 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:Obcred.ViewModels"
+             xmlns:local="using:Obcred.Converters"
+             x:DataType="viewModels:PdfSettingsViewModel"
+             x:Class="Obcred.Views.PdfSettingsView">
+
+    <Grid Classes="PageRoot" Margin="28,24,28,28" RowDefinitions="Auto,*">
+        <Grid.RenderTransform>
+            <TranslateTransform/>
+        </Grid.RenderTransform>
+
+        <TextBlock Grid.Row="0" Text="PDF Template" Classes="PageTitleStyle"/>
+
+        <Grid Grid.Row="1" ColumnDefinitions="1*,1.3*">
+
+            <!-- LEFT: template picker + logo + save -->
+            <StackPanel Grid.Column="0" Margin="0,0,20,0">
+
+                <Border Classes="Card" Margin="0,0,0,20">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Classes="CardHeaderAccent"/>
+                            <TextBlock Text="Choose a Layout" Classes="CardHeaderStyle" Margin="0"/>
+                        </StackPanel>
+
+                        <RadioButton Classes="TemplateCard" GroupName="PdfTemplate"
+                                     Command="{Binding SelectTemplateCommand}" CommandParameter="Classic"
+                                     IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Classic}">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Classic" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrandText}"/>
+                                <TextBlock Text="Bordered seller/buyer boxes, a clean ruled table. Traditional and safe."
+                                           FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton Classes="TemplateCard" GroupName="PdfTemplate"
+                                     Command="{Binding SelectTemplateCommand}" CommandParameter="Modern"
+                                     IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Modern}">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Modern" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrandText}"/>
+                                <TextBlock Text="Bold accent header band with your logo, shaded table rows, a stronger totals block."
+                                           FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton Classes="TemplateCard" GroupName="PdfTemplate"
+                                     Command="{Binding SelectTemplateCommand}" CommandParameter="Minimal"
+                                     IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Minimal}">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Minimal" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrandText}"/>
+                                <TextBlock Text="No borders or shading — just typography, whitespace, and thin dividers."
+                                           FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="Card" Margin="0,0,0,20">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Classes="CardHeaderAccent"/>
+                            <TextBlock Text="Company Logo" Classes="CardHeaderStyle" Margin="0"/>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="72,*">
+                            <Border Grid.Column="0" Width="64" Height="64" CornerRadius="10"
+                                    Background="{StaticResource InputBackground}" BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
+                                    ClipToBounds="True">
+                                <Panel>
+                                    <Image Source="{Binding LogoPreview}" Stretch="Uniform" Margin="6"
+                                           IsVisible="{Binding HasLogo}"/>
+                                    <PathIcon Data="{StaticResource IconLayout}" Width="20" Height="20" Foreground="#CBD5E1"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              IsVisible="{Binding !HasLogo}"/>
+                                </Panel>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0" Spacing="8">
+                                <TextBlock Text="PNG or JPEG. Shown top-left/top-right on the invoice depending on layout."
+                                           FontSize="11.5" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Command="{Binding BrowseLogoCommand}" Classes="SecondaryActionBtn" Padding="14,0" Height="34">
+                                        <TextBlock Text="Upload Logo" FontSize="12.5" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Command="{Binding RemoveLogoCommand}" Classes="IconGhostBtn" IsVisible="{Binding HasLogo}"
+                                            ToolTip.Tip="Remove logo" Padding="8">
+                                        <PathIcon Data="{StaticResource Close}" Width="12" Height="12"/>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Button Command="{Binding SaveCommand}" Classes="PrimaryActionBtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                    <TextBlock Text="Save Template"/>
+                </Button>
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandSuccess}" FontSize="12"
+                           TextWrapping="Wrap" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- RIGHT: live preview -->
+            <Border Grid.Column="1" Classes="Card" Padding="20">
+                <Grid RowDefinitions="Auto,*">
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,14">
+                        <Border Classes="CardHeaderAccent"/>
+                        <TextBlock Text="Live Preview" Classes="CardHeaderStyle" Margin="0"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="1" Background="{StaticResource InputBackground}" CornerRadius="10" Padding="16">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                            <Border Background="White" BoxShadow="0 8 24 -6 #26000000" HorizontalAlignment="Center">
+                                <Image Source="{Binding PdfPreview}" Stretch="Uniform" MaxWidth="480"/>
+                            </Border>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

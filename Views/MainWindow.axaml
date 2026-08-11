@@ -47,7 +47,7 @@
                             </StackPanel>
                         </RadioButton>
 
-                        <RadioButton Classes="NavItem" IsEnabled="False" GroupName="MainNav">
+                        <RadioButton Classes="NavItem" Click="NavClientList_Click" GroupName="MainNav">
                             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <PathIcon Data="{StaticResource IconUsers}" Width="16" Height="16"/>
                                 <TextBlock Text="Client List" VerticalAlignment="Center"/>
@@ -58,6 +58,20 @@
                             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <PathIcon Data="{StaticResource IconHistory}" Width="16" Height="16"/>
                                 <TextBlock Text="Invoice History" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton Classes="NavItem" Click="NavReceivedInvoices_Click" GroupName="MainNav">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconInbox}" Width="16" Height="16"/>
+                                <TextBlock Text="Received Invoices" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton Classes="NavItem" Click="NavPdfTemplate_Click" GroupName="MainNav">
+                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconLayout}" Width="16" Height="16"/>
+                                <TextBlock Text="PDF Template" VerticalAlignment="Center"/>
                             </StackPanel>
                         </RadioButton>
                     </StackPanel>

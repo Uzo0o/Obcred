@@ -17,6 +17,12 @@ public interface IDatabaseService
     Task<List<InvoiceRecord>> GetAllInvoicesAsync();
     Task<InvoiceRecord> GetInvoiceByIdAsync(int id);
 
+    // Incoming ("влезни") invoices — cached UJP data plus a local paid/unpaid flag
+    Task SavePurchaseInvoiceAsync(PurchaseInvoiceRecord invoice);
+    Task<List<PurchaseInvoiceRecord>> GetAllPurchaseInvoicesAsync();
+    Task<PurchaseInvoiceRecord?> GetPurchaseInvoiceByEuidAsync(string euid);
+    Task SetPurchaseInvoicePaidAsync(string euid, bool isPaid);
+
     // Gap-free sequential numbering (per year)
     Task<int> PeekNextInvoiceSeqAsync(int year);
     Task CommitInvoiceSeqAsync(int year);
