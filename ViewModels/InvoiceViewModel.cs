@@ -470,8 +470,12 @@ public partial class InvoiceViewModel : ObservableObject
                             docItemUnitDiscountAmount = 0m,
                             docItemUnitPriceWoVat = Math.Round(item.UnitPrice, 2),
 
-                            // UJP requires these as percentages (18.0, 10.0, 5.0, 0.0)
-                            docItemUnitVat = rate.Percent,
+                            // docItemUnitVat = VAT AMOUNT (currency) for ONE unit = unitPriceWoVat * rate.
+                            // docItemVat = the VAT rate as a percentage (18.0, 10.0, 5.0, 0.0).
+                            // These are NOT the same value — see UJP sample payloads (e.g. unitVat 4.7619 vs vat 5).
+                            // Derived from the SAME rounded unit price we actually send, so UJP's own
+                            // recheck (roundedPrice * rate) lands inside the allowed threshold.
+                            docItemUnitVat = Math.Round(Math.Round(item.UnitPrice, 2) * rate.Fraction, 4),
                             docItemVat = rate.Percent,
 
                             docItemVatGroup = rate.ApiCode,
