@@ -11,6 +11,8 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
         <AvaloniaResource Include="logo64.ico" />
+        <AvaloniaXaml Remove="App.axaml" />
+        <AvaloniaResource Include="App.axaml" />
     </ItemGroup>
 
     <ItemGroup>

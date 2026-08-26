@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
@@ -110,10 +111,14 @@ public class UjpService : IUjpService
         using var client = new HttpClient(handler);
         client.BaseAddress = new Uri(BaseUrl);
 
+        string serialHeader = GetCorrectSerialNumber(cert);
+
         client.DefaultRequestHeaders.Clear();
         client.DefaultRequestHeaders.Add("X-EDB", settings.SellerEdb);
         client.DefaultRequestHeaders.Add("X-EUJP-ID", settings.EujpId);
-        client.DefaultRequestHeaders.Add("X-SERIAL-NUMBER", GetCorrectSerialNumber(cert));
+        client.DefaultRequestHeaders.Add("X-SERIAL-NUMBER", serialHeader);
+
+        LogSubmissionDebugInfo(cert, serialHeader, settings, jsonString, signedJws);
 
         var wrapper = new { jws = signedJws };
         string payloadJson = JsonSerializer.Serialize(wrapper);
@@ -122,6 +127,8 @@ public class UjpService : IUjpService
         const string endpoint = "/JSONReceiver/api/v1/sales-invoices/send";
         var response = await client.PostAsync(endpoint, content);
         string responseContent = await response.Content.ReadAsStringAsync();
+
+        LogResponseDebugInfo(responseContent, (int)response.StatusCode);
 
         // Always return a fully-populated result — including on rejection — so the
         // caller can persist the signed document and server response either way.
@@ -163,7 +170,10 @@ public class UjpService : IUjpService
         client.DefaultRequestHeaders.Clear();
         client.DefaultRequestHeaders.Add("X-EDB", settings.SellerEdb);
         client.DefaultRequestHeaders.Add("X-EUJP-ID", settings.EujpId);
-        client.DefaultRequestHeaders.Add("X-SERIAL-NUMBER", GetCorrectSerialNumber(cert));
+        string syncSerialHeader = GetCorrectSerialNumber(cert);
+        client.DefaultRequestHeaders.Add("X-SERIAL-NUMBER", syncSerialHeader);
+
+        LogSubmissionDebugInfo(cert, syncSerialHeader, settings, jsonString, signedJws, label: "SYNC");
 
         var wrapper = new { jws = signedJws };
         var content = new StringContent(JsonSerializer.Serialize(wrapper), Encoding.UTF8, "application/json");
@@ -173,6 +183,8 @@ public class UjpService : IUjpService
 
         byte[] contentBytes = await response.Content.ReadAsByteArrayAsync();
         string responseText = Encoding.UTF8.GetString(contentBytes);
+
+        LogResponseDebugInfo(responseText, (int)response.StatusCode);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -185,11 +197,77 @@ public class UjpService : IUjpService
         return wrapperResponse?.Invoices ?? new List<PurchaseInvoiceStatusDto>();
     }
 
+    // TEMP DEBUG LOGGING — writes cert info and the exact request/response to a
+    // plain-text log next to your other app data, so you can diff it against
+    // what UJP's portal shows for this certificate/serial number. Safe to
+    // remove once E5011 is confirmed resolved.
+    private static readonly string DebugLogPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "IntegritiEFakturi", "ujp-submission-debug.log");
+
+    private static void LogSubmissionDebugInfo(
+        X509Certificate2 cert, string serialHeader, UserSettings settings, string jsonPayload, string signedJws, string label = "SUBMIT")
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(DebugLogPath)!);
+            byte[] rawSerialBytes = cert.GetSerialNumber(); // little-endian, as .NET returns it
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"===== {label} {DateTime.Now:O} =====");
+            sb.AppendLine("-- Certificate --");
+            sb.AppendLine($"Subject:              {cert.Subject}");
+            sb.AppendLine($"Issuer:               {cert.Issuer}");
+            sb.AppendLine($"Thumbprint:           {cert.Thumbprint}");
+            sb.AppendLine($"NotBefore / NotAfter: {cert.NotBefore:O} / {cert.NotAfter:O}");
+            sb.AppendLine($"cert.SerialNumber (.NET, little-endian, RAW): {cert.SerialNumber}");
+            sb.AppendLine($"GetSerialNumber() bytes (little-endian, hex): {Convert.ToHexString(rawSerialBytes)}");
+            sb.AppendLine($"Corrected serial sent as X-SERIAL-NUMBER:     {serialHeader}");
+            sb.AppendLine("-- Request headers --");
+            sb.AppendLine($"X-EDB:      {settings.SellerEdb}");
+            sb.AppendLine($"X-EUJP-ID:  {settings.EujpId}");
+            sb.AppendLine($"CertThumbprint (setting): {settings.CertThumbprint}");
+            sb.AppendLine($"CertPath (setting):       {settings.CertPath}");
+            sb.AppendLine("-- Payload sent (before JWS signing) --");
+            sb.AppendLine(jsonPayload);
+            sb.AppendLine("-- Signed JWS --");
+            sb.AppendLine(signedJws);
+            sb.AppendLine();
+
+            File.AppendAllText(DebugLogPath, sb.ToString());
+        }
+        catch
+        {
+            // Logging must never break a real submission.
+        }
+    }
+
+    private static void LogResponseDebugInfo(string responseBody, int statusCode)
+    {
+        try
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"-- UJP response (HTTP {statusCode}) --");
+            sb.AppendLine(responseBody);
+            sb.AppendLine();
+            File.AppendAllText(DebugLogPath, sb.ToString());
+        }
+        catch
+        {
+            // Logging must never break a real submission.
+        }
+    }
+
     private static string GetCorrectSerialNumber(X509Certificate2 cert)
     {
-        string hex = cert.SerialNumber; // already in the correct byte order
-        hex = hex.TrimStart('0');
-        if (string.IsNullOrEmpty(hex)) hex = "0"; // edge case: serial is literally zero
+        // Confirmed against the UJP portal: .NET's X509Certificate2.SerialNumber
+        // is already in the correct/conventional byte order for this runtime —
+        // there is no byte-order issue to correct. UJP expects the serial as an
+        // unpadded hex integer (no leading zero characters), matching what its
+        // own portal displays for this certificate.
+        string hex = cert.SerialNumber;
+       // hex = hex.TrimStart('0');
+        //if (string.IsNullOrEmpty(hex)) hex = "0"; // edge case: serial is literally zero
         return hex;
     }
 
