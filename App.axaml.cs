@@ -26,7 +26,7 @@ public partial class App : Application
         {
             // Rebuild the Dependency Injection container from the WPF project
             AppHost = Host.CreateDefaultBuilder()
-                .ConfigureAppConfiguration((context, builder) => 
+                .ConfigureAppConfiguration((context, builder) =>
                 {
                     builder.AddJsonFile("appsettings.json", optional: true);
                 })
@@ -34,12 +34,17 @@ public partial class App : Application
                 {
                     services.AddSingleton<SettingsWindow>();
                     services.AddSingleton<SettingsViewModel>();
-                    
+
                     services.AddHttpClient<IUjpService, UjpService>();
+                    services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
                     services.AddSingleton<IUserSettingsService, UserSettingsService>();
                     services.AddSingleton<IDatabaseService, DatabaseService>();
                     services.AddSingleton<IInvoicePdfService, InvoicePdfService>();
-                    
+
+                    // NEW: login window/viewmodel, shown before Settings/MainWindow.
+                    services.AddSingleton<LoginWindow>();
+                    services.AddSingleton<LoginViewModel>();
+
                     services.AddSingleton<MainWindow>();
                     services.AddSingleton<InvoiceViewModel>();
                     services.AddSingleton<HistoryViewModel>();
@@ -53,52 +58,80 @@ public partial class App : Application
 
             var settingsService = AppHost.Services.GetRequiredService<IUserSettingsService>();
 
-            // 1. Tell Avalonia: "Do not close the app just because a window closed!"
+            // Don't close the app just because a window closed, until we've decided
+            // what the real "main" window is going to be.
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
 
-            if (settingsService.IsConfigured())
+            // Extracted from your original logic unchanged — decides whether the
+            // user still needs the first-run Settings screen or can go straight
+            // to the invoicing UI. Now called *after* a successful login instead
+            // of being the very first thing shown.
+            void ShowSettingsOrMainWindow()
             {
-                var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-                
-                // Inject the ViewModel directly into the Window's DataContext
-                mainWindow.DataContext = AppHost.Services.GetRequiredService<InvoiceViewModel>();
-                desktop.MainWindow = mainWindow;
-                mainWindow.Show();
-                
-                // 2. Now that the main window is up, return to normal behavior
-                desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose; 
+                if (settingsService.IsConfigured())
+                {
+                    var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+                    mainWindow.DataContext = AppHost.Services.GetRequiredService<InvoiceViewModel>();
+                    desktop.MainWindow = mainWindow;
+                    mainWindow.Show();
+
+                    desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose;
+                }
+                else
+                {
+                    var settingsWindow = AppHost.Services.GetRequiredService<SettingsWindow>();
+
+                    var settingsVm = AppHost.Services.GetRequiredService<SettingsViewModel>();
+                    settingsWindow.DataContext = settingsVm;
+                    settingsVm.CloseAction = () => settingsWindow.Close();
+                    settingsVm.BrowseFileAction = () => SettingsWindow.BrowsePfxAsync(settingsWindow);
+
+                    desktop.MainWindow = settingsWindow;
+                    settingsWindow.Show();
+
+                    settingsWindow.Closed += (s, args) =>
+                    {
+                        if (settingsService.IsConfigured())
+                        {
+                            var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
+                            mainWindow.DataContext = AppHost.Services.GetRequiredService<InvoiceViewModel>();
+
+                            desktop.MainWindow = mainWindow;
+                            mainWindow.Show();
+
+                            desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose;
+                        }
+                        else
+                        {
+                            desktop.Shutdown(); // They exited without finishing setup
+                        }
+                    };
+                }
+            }
+
+            // NEW: gate everything behind Google sign-in.
+            var loginWindow = AppHost.Services.GetRequiredService<LoginWindow>();
+            var loginVm = AppHost.Services.GetRequiredService<LoginViewModel>();
+            loginWindow.DataContext = loginVm;
+
+            // If a valid session is already cached (DPAPI-encrypted on disk),
+            // skip the login screen entirely.
+            bool restoredExistingSession = await loginVm.TryAutoLoginAsync();
+
+            if (restoredExistingSession)
+            {
+                ShowSettingsOrMainWindow();
             }
             else
             {
-                var settingsWindow = AppHost.Services.GetRequiredService<SettingsWindow>();
-
-                // Inject the ViewModel directly into the Settings Window
-                var settingsVm = AppHost.Services.GetRequiredService<SettingsViewModel>();
-                settingsWindow.DataContext = settingsVm;
-                settingsVm.CloseAction = () => settingsWindow.Close();
-                settingsVm.BrowseFileAction = () => SettingsWindow.BrowsePfxAsync(settingsWindow);
-
-                desktop.MainWindow = settingsWindow;
-                settingsWindow.Show();
-            
-                settingsWindow.Closed += (s, args) => 
+                loginVm.LoginSucceeded = _ =>
                 {
-                    if (settingsService.IsConfigured())
-                    {
-                        var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-                        mainWindow.DataContext = AppHost.Services.GetRequiredService<InvoiceViewModel>();
-                        
-                        desktop.MainWindow = mainWindow;
-                        mainWindow.Show();
-                        
-                        // Return to normal behavior
-                        desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnMainWindowClose;
-                    }
-                    else
-                    {
-                        desktop.Shutdown(); // They exited without finishing setup
-                    }
+                    loginWindow.Close();
+                    ShowSettingsOrMainWindow();
                 };
+
+                desktop.MainWindow = loginWindow;
+                loginWindow.Show();
             }
         }
 

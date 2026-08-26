@@ -1,0 +1,57 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="Obcred.Views.LoginWindow"
+        Title="Sign in — Obcred"
+        Width="420"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BrandBackground}"
+        xmlns:vm="using:Obcred.ViewModels"
+        x:DataType="vm:LoginViewModel">
+
+    <StackPanel Margin="32" Spacing="4" HorizontalAlignment="Center">
+
+        <Border Width="56" Height="56" CornerRadius="16" Background="{StaticResource BrandPrimary}"
+                HorizontalAlignment="Center" Margin="0,4,0,16">
+            <PathIcon Data="{StaticResource IconUsers}" Width="26" Height="26" Foreground="White"/>
+        </Border>
+
+        <TextBlock Text="Welcome to Obcred" FontSize="20" FontWeight="Bold"
+                   Foreground="{StaticResource BrandText}" HorizontalAlignment="Center"/>
+        <TextBlock Text="Sign in with your Google account to continue."
+                   Foreground="{StaticResource TextMuted}" FontSize="12.5"
+                   HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                   MaxWidth="300" Margin="0,4,0,24"/>
+
+        <!-- Idle state: just the Google button -->
+        <Button Content="Continue with Google"
+                Command="{Binding LoginCommand}"
+                Classes="PrimaryActionBtn"
+                HorizontalAlignment="Stretch"
+                IsVisible="{Binding !IsBusy}"/>
+
+        <!-- Busy state: waiting on the browser -->
+        <StackPanel IsVisible="{Binding IsBusy}" Spacing="12" Margin="0,4,0,0">
+            <ProgressBar IsIndeterminate="True" Height="4" CornerRadius="2"
+                         Foreground="{StaticResource BrandAccent}" Background="{StaticResource BorderLight}"/>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource TextMuted}"
+                       FontSize="12.5" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+            <TextBlock Text="A browser window has opened — finish signing in there."
+                       Foreground="{StaticResource TextMuted}" FontSize="11.5"
+                       HorizontalAlignment="Center" FontStyle="Italic" TextWrapping="Wrap" TextAlignment="Center"/>
+            <Button Content="Cancel" Command="{Binding CancelLoginCommand}"
+                    Classes="SecondaryActionBtn" HorizontalAlignment="Center" Width="120"/>
+        </StackPanel>
+
+        <!-- Error banner -->
+        <Border Classes="BannerDanger" IsVisible="{Binding HasError}" Margin="0,16,0,0" HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandDanger}"
+                       FontSize="12.5" TextWrapping="Wrap" TextAlignment="Center"/>
+        </Border>
+
+    </StackPanel>
+</Window>
