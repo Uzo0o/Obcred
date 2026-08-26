@@ -32,9 +32,11 @@ public class GoogleAuthService : IGoogleAuthService
 {
     private const string WorkerBaseUrl = "https://broken-fog-91af.ustefan06.workers.dev";
 
-    // route is configured to redirect back to.
+    // Bare route only — LoginWithGoogleAsync appends "?state=..." itself.
+    // Don't add a query string here, or you'll get two "?state=" glued
+    // together into one garbled value (ask me how I know).
     private const string LoopbackPrefix = "http://localhost:5050/";
-    private const string GoogleLoginUrl = "https://broken-fog-91af.ustefan06.workers.dev/auth/google?state=test";
+    private const string GoogleLoginUrl = "https://broken-fog-91af.ustefan06.workers.dev/auth/google";
 
     private static readonly TimeSpan LoginTimeout = TimeSpan.FromMinutes(3);
 
@@ -120,8 +122,6 @@ public class GoogleAuthService : IGoogleAuthService
                     "Close any other sign-in attempt and try again.", ex);
             }
 
-            System.Diagnostics.Debug.WriteLine($"[AUTH DEBUG] client-generated state = {state}");
-
             Process.Start(new ProcessStartInfo
             {
                 FileName = $"{GoogleLoginUrl}?state={state}",
@@ -192,16 +192,11 @@ public class GoogleAuthService : IGoogleAuthService
 
     private static async Task RespondToBrowserAsync(HttpListenerContext context, bool success)
     {
-        // TEMP DEBUG: shows exactly what came back so we can see what mismatched.
-        // Remove this once the state/code issue is found.
-        string debugQuery = System.Net.WebUtility.HtmlEncode(context.Request.Url?.Query ?? "(none)");
-
         string html = success
             ? "<html><body style=\"font-family:sans-serif;text-align:center;padding-top:80px;\">" +
               "<h2>Login successful!</h2><p>You can close this tab and return to Obcred.</p></body></html>"
             : "<html><body style=\"font-family:sans-serif;text-align:center;padding-top:80px;\">" +
-              "<h2>Login could not be verified.</h2><p>Please close this tab and try again in Obcred.</p>" +
-              $"<p style=\"color:#999;font-size:12px;word-break:break-all;\">{debugQuery}</p></body></html>";
+              "<h2>Login could not be verified.</h2><p>Please close this tab and try again in Obcred.</p></body></html>";
 
         byte[] bytes = Encoding.UTF8.GetBytes(html);
         context.Response.ContentType = "text/html; charset=utf-8";
