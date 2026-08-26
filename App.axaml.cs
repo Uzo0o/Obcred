@@ -37,6 +37,8 @@ public partial class App : Application
 
                     services.AddHttpClient<IUjpService, UjpService>();
                     services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
+                    services.AddHttpClient<IUsageService, UsageService>();
+                    services.AddSingleton<ISessionContext, SessionContext>();
                     services.AddSingleton<IUserSettingsService, UserSettingsService>();
                     services.AddSingleton<IDatabaseService, DatabaseService>();
                     services.AddSingleton<IInvoicePdfService, InvoicePdfService>();
@@ -112,24 +114,29 @@ public partial class App : Application
             // NEW: gate everything behind Google sign-in.
             var loginWindow = AppHost.Services.GetRequiredService<LoginWindow>();
             var loginVm = AppHost.Services.GetRequiredService<LoginViewModel>();
+            var sessionContext = AppHost.Services.GetRequiredService<ISessionContext>();
             loginWindow.DataContext = loginVm;
 
+            bool loginWindowShown = false;
+
+            // Fires for BOTH paths below — a silently restored cached session,
+            // and a fresh interactive login — so the session only needs to be
+            // captured in one place.
+            loginVm.LoginSucceeded = session =>
+            {
+                sessionContext.SetCurrent(session);
+                if (loginWindowShown)
+                    loginWindow.Close();
+                ShowSettingsOrMainWindow();
+            };
+
             // If a valid session is already cached (DPAPI-encrypted on disk),
-            // skip the login screen entirely.
+            // this fires LoginSucceeded synchronously and skips the login screen.
             bool restoredExistingSession = await loginVm.TryAutoLoginAsync();
 
-            if (restoredExistingSession)
+            if (!restoredExistingSession)
             {
-                ShowSettingsOrMainWindow();
-            }
-            else
-            {
-                loginVm.LoginSucceeded = _ =>
-                {
-                    loginWindow.Close();
-                    ShowSettingsOrMainWindow();
-                };
-
+                loginWindowShown = true;
                 desktop.MainWindow = loginWindow;
                 loginWindow.Show();
             }

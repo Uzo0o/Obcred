@@ -16,6 +16,7 @@ public partial class InvoiceViewModel : ObservableObject
     private readonly IDatabaseService _databaseService;
     private readonly IUserSettingsService _settingsService;
     private readonly IInvoicePdfService _pdfService;
+    private readonly IUsageService _usageService;
 
     // Wired by the view: prompts for a save location, returns the chosen path (or null if cancelled).
     public Func<string, Task<string?>>? SavePdfFileAction { get; set; }
@@ -51,6 +52,12 @@ public partial class InvoiceViewModel : ObservableObject
     public bool IsNotBusy => !IsBusy;
     partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(IsNotBusy));
 
+    // Plan/usage badge for the sidebar (bound in MainWindow.axaml).
+    [ObservableProperty] private string _usagePlanLabel = "Free plan";
+    [ObservableProperty] private string _usageCountLabel = string.Empty;
+    [ObservableProperty] private double _usageProgressFraction;
+    [ObservableProperty] private bool _usageIsUnlimited;
+
     // Environment banner for the main window (bound in MainWindow.axaml).
     public bool IsProduction => _settingsService.CurrentSettings.UseProductionEnvironment;
     public bool IsTest => !IsProduction;
@@ -70,12 +77,13 @@ public partial class InvoiceViewModel : ObservableObject
 
     // The DI container automatically hands this ViewModel the UjpService!
     public InvoiceViewModel(IUjpService ujpService, IDatabaseService databaseService,
-        IUserSettingsService settingsService, IInvoicePdfService pdfService)
+        IUserSettingsService settingsService, IInvoicePdfService pdfService, IUsageService usageService)
     {
         _ujpService = ujpService;
         _databaseService = databaseService;
         _settingsService = settingsService;
         _pdfService = pdfService;
+        _usageService = usageService;
 
         _ = InitializeAsync();
     }
@@ -84,6 +92,26 @@ public partial class InvoiceViewModel : ObservableObject
     {
         await LoadAllClientsAsync();
         await GenerateNextInvoiceNumberAsync();
+        await RefreshUsageAsync();
+    }
+
+    // Pulls the current month's plan/usage snapshot for the sidebar badge.
+    // Best-effort: if the Worker is unreachable this just leaves the last
+    // known badge state in place rather than failing anything.
+    private async Task RefreshUsageAsync()
+    {
+        var status = await _usageService.GetStatusAsync();
+        if (status is null)
+            return;
+
+        UsagePlanLabel = (char.ToUpper(status.Plan[0]) + status.Plan[1..]) + " plan";
+        UsageIsUnlimited = status.Limit is null;
+        UsageCountLabel = UsageIsUnlimited
+            ? $"{status.Used} sent this month"
+            : $"{status.Used}/{status.Limit} this month";
+        UsageProgressFraction = (!UsageIsUnlimited && status.Limit > 0)
+            ? Math.Clamp((double)status.Used / status.Limit!.Value, 0, 1)
+            : 0;
     }
 
     // Peeks the gap-free counter and shows the next number (without consuming it).
@@ -550,6 +578,11 @@ public partial class InvoiceViewModel : ObservableObject
                 // Clear the line items so the next invoice starts fresh (buyer is kept for convenience).
                 InvoiceItems.Clear();
                 RecalculateTotals();
+
+                // Best-effort usage reporting — never lets a network hiccup here
+                // block or fail the invoice that was already successfully sent.
+                await _usageService.IncrementAsync();
+                await RefreshUsageAsync();
             }
 
             StatusMessage = result.Success
