@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
+using Obcred.Models;
 using Obcred.Services;
 using Obcred.ViewModels;
 
@@ -16,6 +18,53 @@ public partial class MainWindow : Window
         // Start on the invoice entry screen. It inherits the window's DataContext
         // (the shared InvoiceViewModel set up by the DI container).
         PageHost.Content = new InvoiceEntryView();
+
+        // DataContext is assigned by App.axaml.cs AFTER this constructor runs,
+        // so we hook the callback once it actually arrives rather than here.
+        DataContextChanged += (_, _) =>
+        {
+            if (DataContext is InvoiceViewModel invoiceViewModel)
+                invoiceViewModel.OverageWarningRequested = status => _ = ShowOverageWarningAsync(status);
+        };
+    }
+
+    private async Task ShowOverageWarningAsync(UsageStatus status)
+    {
+        string planDisplayName = char.ToUpper(status.Plan[0]) + status.Plan[1..];
+        var warningWindow = new OverageWarningWindow(planDisplayName, status.Limit ?? 0, status.OveragePerInvoice);
+        var result = await warningWindow.ShowDialog<OverageWarningResult?>(this);
+
+        var usageService = App.AppHost!.Services.GetRequiredService<IUsageService>();
+
+        if (result == OverageWarningResult.StayOnPlan)
+        {
+            usageService.AcknowledgeOverageThisMonth();
+        }
+        else if (result == OverageWarningResult.ChoosePlan)
+        {
+            await OpenPlanPickerAsync();
+        }
+        // A closed-without-choosing window (null) intentionally leaves nothing
+        // acknowledged — the prompt will simply show again on the next submit.
+    }
+
+    private async Task OpenPlanPickerAsync()
+    {
+        var planPickerViewModel = App.AppHost!.Services.GetRequiredService<PlanPickerViewModel>();
+        planPickerViewModel.PlanChanged = result =>
+        {
+            // Reflect the new plan in the sidebar badge immediately.
+            _ = (DataContext as InvoiceViewModel)?.RefreshUsageAsync();
+        };
+
+        var window = new PlanPickerWindow { DataContext = planPickerViewModel };
+        await planPickerViewModel.LoadAsync();
+        await window.ShowDialog(this);
+    }
+
+    private async void UsageBadge_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        await OpenPlanPickerAsync();
     }
 
     // The window is frameless (SystemDecorations=None), so we drag it via the top bar.
@@ -62,7 +111,8 @@ public partial class MainWindow : Window
         var services = App.AppHost!.Services;
         var settingsViewModel = new SettingsViewModel(
             services.GetRequiredService<IUserSettingsService>(),
-            services.GetRequiredService<IUjpService>());
+            services.GetRequiredService<IUjpService>(),
+            services.GetRequiredService<IUsageService>());
 
         var window = new SettingsWindow { DataContext = settingsViewModel };
         settingsViewModel.CloseAction = () => window.Close();

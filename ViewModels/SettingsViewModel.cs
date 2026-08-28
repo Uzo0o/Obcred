@@ -12,6 +12,7 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly IUserSettingsService _settingsService;
     private readonly IUjpService _ujpService;
+    private readonly IUsageService _usageService;
     
     public Action? CloseAction { get; set; }
     public Func<Task<string?>>? BrowseFileAction { get; set; } // Replaces OpenFileDialog
@@ -25,10 +26,11 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private bool _useProductionEnvironment;
     [ObservableProperty] private string _statusMessage = string.Empty;
 
-    public SettingsViewModel(IUserSettingsService settingsService, IUjpService ujpService)
+    public SettingsViewModel(IUserSettingsService settingsService, IUjpService ujpService, IUsageService usageService)
     {
         _settingsService = settingsService;
         _ujpService = ujpService;
+        _usageService = usageService;
         
         var current = _settingsService.CurrentSettings;
         CertPath = current.CertPath ?? string.Empty;
@@ -125,6 +127,12 @@ public partial class SettingsViewModel : ObservableObject
             initialSettings.SellerZip = company?.Address?.Zip ?? "1000";
             
             _settingsService.SaveSettings(initialSettings);
+
+            // UJP just confirmed this EDB is real — this is the one and only
+            // place we should ever push it to the Worker (never an unverified
+            // value someone just typed). Best-effort: failure here shouldn't
+            // block finishing setup.
+            _ = _usageService.SyncEdbAsync(SellerEdb);
 
             StatusMessage = "Setup Complete!";
             

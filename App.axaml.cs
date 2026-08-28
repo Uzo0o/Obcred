@@ -46,6 +46,7 @@ public partial class App : Application
                     // NEW: login window/viewmodel, shown before Settings/MainWindow.
                     services.AddSingleton<LoginWindow>();
                     services.AddSingleton<LoginViewModel>();
+                    services.AddSingleton<PlanPickerViewModel>();
 
                     services.AddSingleton<MainWindow>();
                     services.AddSingleton<InvoiceViewModel>();

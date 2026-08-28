@@ -28,15 +28,14 @@
 
                     <!-- BRAND -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0,0,0" Spacing="12">
-                        <Border Width="26" Height="26" CornerRadius="8">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                    <GradientStop Color="#7AB4FF" Offset="0"/>
-                                    <GradientStop Color="#2E86FF" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
-                        <TextBlock Text="Obcred" FontWeight="Bold" FontSize="18" Foreground="White" LetterSpacing="0.3"/>
+                        <Image Source="avares://Obcred/Assets/Logo.png" 
+                               Width="26" Height="26" 
+                               VerticalAlignment="Center" />
+           
+                        <TextBlock Text="Obcred" 
+                                   FontWeight="Bold" FontSize="18" 
+                                   Foreground="White" LetterSpacing="0.3" 
+                                   VerticalAlignment="Center" />
                     </StackPanel>
 
                     <!-- NAV -->
@@ -82,7 +81,9 @@
 
                         <!-- PLAN / USAGE BADGE -->
                         <Border Background="{StaticResource SidebarHoverBackground}" CornerRadius="10"
-                                Padding="12,10" Margin="0,0,0,10">
+                                Padding="12,10" Margin="0,0,0,10" Cursor="Hand"
+                                PointerPressed="UsageBadge_PointerPressed"
+                                ToolTip.Tip="Click to change your plan">
                             <StackPanel Spacing="6">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <TextBlock Text="{Binding UsagePlanLabel}" FontSize="11.5" FontWeight="SemiBold"

@@ -21,6 +21,10 @@ public partial class InvoiceViewModel : ObservableObject
     // Wired by the view: prompts for a save location, returns the chosen path (or null if cancelled).
     public Func<string, Task<string?>>? SavePdfFileAction { get; set; }
 
+    // Wired by the view: shown when the person crosses the Free plan's limit
+    // without an acknowledgment on file for this month yet.
+    public Action<UsageStatus>? OverageWarningRequested { get; set; }
+
     public IReadOnlyList<string> TaxOptions { get; } = VatRates.DisplayNames;
     public ObservableCollection<ClientRecord> SearchResults { get; } = new();
     public ObservableCollection<ClientRecord> AllClients { get; } = new();
@@ -97,8 +101,9 @@ public partial class InvoiceViewModel : ObservableObject
 
     // Pulls the current month's plan/usage snapshot for the sidebar badge.
     // Best-effort: if the Worker is unreachable this just leaves the last
-    // known badge state in place rather than failing anything.
-    private async Task RefreshUsageAsync()
+    // known badge state in place rather than failing anything. Public so the
+    // plan picker can force an immediate badge refresh after a switch.
+    public async Task RefreshUsageAsync()
     {
         var status = await _usageService.GetStatusAsync();
         if (status is null)
@@ -112,6 +117,14 @@ public partial class InvoiceViewModel : ObservableObject
         UsageProgressFraction = (!UsageIsUnlimited && status.Limit > 0)
             ? Math.Clamp((double)status.Used / status.Limit!.Value, 0, 1)
             : 0;
+
+        // Every capped plan gets this notice the moment it's crossed — not just
+        // Free. Business has no limit (Limit is null) so it never qualifies.
+        bool overLimit = status.Limit is > 0 && status.Used > status.Limit.Value;
+        if (overLimit && !_usageService.HasAcknowledgedOverageThisMonth())
+        {
+            OverageWarningRequested?.Invoke(status);
+        }
     }
 
     // Peeks the gap-free counter and shows the next number (without consuming it).

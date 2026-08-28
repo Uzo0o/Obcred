@@ -13,4 +13,7 @@ public class UsageStatus
     [JsonPropertyName("remaining")] public int? Remaining { get; set; }
 
     [JsonPropertyName("plan")] public string Plan { get; set; } = "free";
+    [JsonPropertyName("price")] public int Price { get; set; }
+    [JsonPropertyName("overagePerInvoice")] public int OveragePerInvoice { get; set; }
+    [JsonPropertyName("overageCount")] public int OverageCount { get; set; }
 }

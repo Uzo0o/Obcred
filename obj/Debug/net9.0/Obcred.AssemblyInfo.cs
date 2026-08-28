@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Obcred")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e347eb16d694d90b9b674dc8fb0bda2821e636dc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e04c34260520be65056bb6f0252950880e463799")]
 [assembly: System.Reflection.AssemblyProductAttribute("Obcred")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Obcred")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

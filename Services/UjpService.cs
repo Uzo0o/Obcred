@@ -266,8 +266,8 @@ public class UjpService : IUjpService
         // unpadded hex integer (no leading zero characters), matching what its
         // own portal displays for this certificate.
         string hex = cert.SerialNumber;
-       // hex = hex.TrimStart('0');
-        //if (string.IsNullOrEmpty(hex)) hex = "0"; // edge case: serial is literally zero
+        hex = hex.TrimStart('0');
+        if (string.IsNullOrEmpty(hex)) hex = "0"; // edge case: serial is literally zero
         return hex;
     }
 
