@@ -17,16 +17,16 @@ public static class PaidBadgeConverters
 
     public static readonly IValueConverter BackgroundConverter =
         new FuncValueConverter<bool, IBrush>(paid => paid
-            ? new SolidColorBrush(Color.Parse("#DCFCE7"))
-            : new SolidColorBrush(Color.Parse("#FEE2E2")));
+            ? new SolidColorBrush(Color.Parse("#DDF5EA"))
+            : new SolidColorBrush(Color.Parse("#FDE8E7")));
 
     public static readonly IValueConverter ForegroundConverter =
         new FuncValueConverter<bool, IBrush>(paid => paid
-            ? new SolidColorBrush(Color.Parse("#059669"))
-            : new SolidColorBrush(Color.Parse("#DC2626")));
+            ? new SolidColorBrush(Color.Parse("#0F9D6A"))
+            : new SolidColorBrush(Color.Parse("#D93025")));
 
     public static readonly IValueConverter DotColorConverter =
         new FuncValueConverter<bool, Color>(paid => paid
-            ? Color.Parse("#00B894")
-            : Color.Parse("#FF4757"));
+            ? Color.Parse("#0F9D6A")
+            : Color.Parse("#D93025"));
 }

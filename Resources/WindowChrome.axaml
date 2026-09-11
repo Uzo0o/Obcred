@@ -1,0 +1,174 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Caption buttons for the main window, whose client area extends into the
+         title bar. Based on Avalonia's Fluent WindowDrawnDecorations theme, trimmed
+         to look like a Windows 11 title bar: no drawn title text (our top bar shows
+         the page name and the sidebar shows the brand), no full-screen button, flat
+         46px-wide buttons with a light hover and the red close hover. -->
+
+    <x:Double x:Key="ObcredCaptionButtonWidth">46</x:Double>
+
+    <ControlTheme x:Key="ObcredCaptionButton" TargetType="Button">
+        <Setter Property="Background" Value="#14000000"/>
+        <Setter Property="BorderBrush" Value="#22000000"/>
+        <Setter Property="Foreground" Value="#111827"/>
+        <Setter Property="Width" Value="{StaticResource ObcredCaptionButtonWidth}"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="(WindowDecorationProperties.ElementRole)" Value="DecorationsElement"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Name="PART_ContentPresenter"
+                                  Background="Transparent"
+                                  Content="{TemplateBinding Content}"
+                                  HorizontalContentAlignment="Center"
+                                  VerticalContentAlignment="Center"/>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{TemplateBinding Background}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{TemplateBinding BorderBrush}"/>
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="ObcredWindowDecorations" TargetType="WindowDrawnDecorations">
+        <Setter Property="DefaultTitleBarHeight" Value="48"/>
+        <Setter Property="DefaultFrameThickness" Value="1"/>
+        <Setter Property="DefaultShadowThickness" Value="8"/>
+        <Setter Property="Template">
+            <WindowDrawnDecorationsTemplate>
+                <WindowDrawnDecorationsContent>
+
+                    <WindowDrawnDecorationsContent.Underlay>
+                        <Panel x:Name="PART_UnderlayWrapper">
+                            <Border x:Name="PART_WindowBorder"
+                                    Background="Transparent"
+                                    BorderThickness="{TemplateBinding FrameThickness}"
+                                    BorderBrush="#33000000"
+                                    IsHitTestVisible="False"/>
+                            <!-- Transparent drag strip: the app's own top bar and sidebar
+                                 header paint the visible title-bar area. -->
+                            <Panel x:Name="PART_TitleBar" VerticalAlignment="Top"
+                                   Height="{TemplateBinding TitleBarHeight}"
+                                   Background="Transparent"
+                                   IsVisible="{TemplateBinding HasTitleBar}"
+                                   WindowDecorationProperties.ElementRole="TitleBar"/>
+                        </Panel>
+                    </WindowDrawnDecorationsContent.Underlay>
+
+                    <WindowDrawnDecorationsContent.Overlay>
+                        <Panel x:Name="PART_OverlayWrapper">
+                            <StackPanel x:Name="PART_OverlayPanel"
+                                        VerticalAlignment="Top"
+                                        HorizontalAlignment="Right"
+                                        Height="{TemplateBinding TitleBarHeight}"
+                                        IsVisible="{TemplateBinding HasTitleBar}"
+                                        Orientation="Horizontal"
+                                        Spacing="0">
+                                <Button x:Name="PART_MinimizeButton"
+                                        Theme="{StaticResource ObcredCaptionButton}"
+                                        WindowDecorationProperties.ElementRole="MinimizeButton">
+                                    <Viewbox Width="10" Height="10">
+                                        <Path Stretch="Uniform" Fill="#111827"
+                                              Data="M2048 1229v-205h-2048v205h2048z"/>
+                                    </Viewbox>
+                                </Button>
+                                <Button x:Name="PART_MaximizeButton"
+                                        Theme="{StaticResource ObcredCaptionButton}"
+                                        WindowDecorationProperties.ElementRole="MaximizeButton">
+                                    <Viewbox Width="10" Height="10">
+                                        <Path Name="RestoreButtonPath" Stretch="Uniform" Fill="#111827"
+                                              Data="M2048 2048v-2048h-2048v2048h2048zM1843 1843h-1638v-1638h1638v1638z"/>
+                                    </Viewbox>
+                                </Button>
+                                <Button x:Name="PART_CloseButton"
+                                        Background="#C42B1C"
+                                        BorderBrush="#A52316"
+                                        Theme="{StaticResource ObcredCaptionButton}"
+                                        WindowDecorationProperties.ElementRole="CloseButton">
+                                    <Viewbox Width="10" Height="10">
+                                        <Path Name="CloseButtonPath" Stretch="Uniform" Fill="#111827"
+                                              Data="M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z"/>
+                                    </Viewbox>
+                                </Button>
+                            </StackPanel>
+                        </Panel>
+                    </WindowDrawnDecorationsContent.Overlay>
+
+                    <WindowDrawnDecorationsContent.FullscreenPopover>
+                        <Panel Height="{TemplateBinding DefaultTitleBarHeight}"
+                               VerticalAlignment="Top"
+                               Background="#FFFFFF"
+                               WindowDecorationProperties.ElementRole="TitleBar">
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                <Button x:Name="PART_PopoverCloseButton"
+                                        Background="#C42B1C"
+                                        BorderBrush="#A52316"
+                                        Theme="{StaticResource ObcredCaptionButton}"
+                                        WindowDecorationProperties.ElementRole="CloseButton">
+                                    <Viewbox Width="10" Height="10">
+                                        <Path Stretch="Uniform" Fill="#111827"
+                                              Data="M1169 1024l879 -879l-145 -145l-879 879l-879 -879l-145 145l879 879l-879 879l145 145l879 -879l879 879l145 -145z"/>
+                                    </Viewbox>
+                                </Button>
+                            </StackPanel>
+                        </Panel>
+                    </WindowDrawnDecorationsContent.FullscreenPopover>
+
+                </WindowDrawnDecorationsContent>
+            </WindowDrawnDecorationsTemplate>
+        </Setter>
+
+        <!-- Shadow: inset border and add drop shadow -->
+        <Style Selector="^:has-shadow /template/ Panel#PART_UnderlayWrapper">
+            <Setter Property="Margin" Value="{TemplateBinding ShadowThickness}"/>
+        </Style>
+        <Style Selector="^:has-shadow /template/ Border#PART_WindowBorder">
+            <Setter Property="BoxShadow" Value="0 2 10 2 #55000000"/>
+        </Style>
+        <Style Selector="^:has-shadow /template/ Panel#PART_OverlayWrapper">
+            <Setter Property="Margin" Value="{TemplateBinding ShadowThickness}"/>
+        </Style>
+
+        <!-- Border: inset titlebar and buttons inside frame -->
+        <Style Selector="^:has-border /template/ Panel#PART_TitleBar">
+            <Setter Property="Margin" Value="1,1,1,0"/>
+        </Style>
+        <Style Selector="^:has-border /template/ StackPanel#PART_OverlayPanel">
+            <Setter Property="Margin" Value="0,1,1,0"/>
+        </Style>
+
+        <!-- Close button: white glyph while hovered/pressed on the red fill -->
+        <Style Selector="^ /template/ Button#PART_CloseButton:pointerover Path#CloseButtonPath">
+            <Setter Property="Fill" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="^ /template/ Button#PART_CloseButton:pressed Path#CloseButtonPath">
+            <Setter Property="Fill" Value="#FFFFFF"/>
+        </Style>
+
+        <!-- Maximized: restore glyph -->
+        <Style Selector="^:maximized /template/ Path#RestoreButtonPath">
+            <Setter Property="Data" Value="M2048 410h-410v-410h-1638v1638h410v410h1638v-1638zM1434 1434h-1229v-1229h1229v1229zM1843 1843h-1229v-205h1024v-1024h205v1229z"/>
+        </Style>
+
+        <Style Selector="^ /template/ Button:disabled">
+            <Setter Property="Opacity" Value="0.3"/>
+        </Style>
+        <Style Selector="^:not(:has-minimize) /template/ Button#PART_MinimizeButton">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="^:not(:has-maximize) /template/ Button#PART_MaximizeButton">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+
+        <!-- Fullscreen: hide overlay and titlebar (popover takes over) -->
+        <Style Selector="^:fullscreen /template/ StackPanel#PART_OverlayPanel">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="^:fullscreen /template/ Panel#PART_TitleBar">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>

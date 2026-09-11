@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -67,15 +67,25 @@ public partial class MainWindow : Window
         await OpenPlanPickerAsync();
     }
 
-    // The window is frameless (SystemDecorations=None), so we drag it via the top bar.
+    // The client area extends into the title bar, so the top bar doubles as the
+    // drag handle; double-clicking it toggles maximize like a native title bar.
     private void TopBar_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            BeginMoveDrag(e);
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            return;
+        }
+
+        BeginMoveDrag(e);
     }
 
     private void NavNewInvoice_Click(object? sender, RoutedEventArgs e)
     {
+        PageTitle.Text = "New Invoice";
         PageHost.Content = new InvoiceEntryView();
     }
 
@@ -83,6 +93,7 @@ public partial class MainWindow : Window
     {
         var historyViewModel = App.AppHost!.Services.GetRequiredService<HistoryViewModel>();
         await historyViewModel.LoadAsync();
+        PageTitle.Text = "Invoice History";
         PageHost.Content = new InvoiceHistoryView { DataContext = historyViewModel };
     }
 
@@ -90,6 +101,7 @@ public partial class MainWindow : Window
     {
         var clientsViewModel = App.AppHost!.Services.GetRequiredService<ClientsViewModel>();
         await clientsViewModel.LoadAsync();
+        PageTitle.Text = "Clients";
         PageHost.Content = new ClientsView { DataContext = clientsViewModel };
     }
 
@@ -97,12 +109,14 @@ public partial class MainWindow : Window
     {
         var purchaseInvoicesViewModel = App.AppHost!.Services.GetRequiredService<PurchaseInvoicesViewModel>();
         await purchaseInvoicesViewModel.LoadFromCacheAsync();
+        PageTitle.Text = "Received Invoices";
         PageHost.Content = new PurchaseInvoicesView { DataContext = purchaseInvoicesViewModel };
     }
 
     private void NavPdfTemplate_Click(object? sender, RoutedEventArgs e)
     {
         var pdfSettingsViewModel = App.AppHost!.Services.GetRequiredService<PdfSettingsViewModel>();
+        PageTitle.Text = "PDF Template";
         PageHost.Content = new PdfSettingsView { DataContext = pdfSettingsViewModel };
     }
 
@@ -124,18 +138,4 @@ public partial class MainWindow : Window
         (DataContext as InvoiceViewModel)?.RefreshEnvironment();
     }
 
-    private void Minimize_Click(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
-    private void Maximize_Click(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-    }
-
-    private void Close_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
 }

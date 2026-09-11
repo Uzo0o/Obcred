@@ -1,71 +1,91 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="using:Avalonia.Data.Converters"
         mc:Ignorable="d"
         x:Class="Obcred.Views.SettingsWindow"
-        Title="Settings"
-        Width="480"
+        Title="Settings — Obcred"
+        Icon="/logo64.ico"
+        Width="520"
         SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
         Background="{StaticResource BrandBackground}"
         xmlns:vm="using:Obcred.ViewModels"
         x:DataType="vm:SettingsViewModel"
         >
 
-    <StackPanel Margin="28" Spacing="4">
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-            <PathIcon Data="{StaticResource Settings}" Width="18" Height="18" Foreground="{StaticResource BrandAccent}" Margin="0,0,10,0"/>
-            <TextBlock Text="Software Setup" FontSize="20" FontWeight="Bold" Foreground="{StaticResource BrandText}"/>
-        </StackPanel>
-        <TextBlock Text="Configure your digital certificate, company details and UJP environment."
-                   Foreground="{StaticResource TextMuted}" FontSize="12.5" Margin="0,0,0,16" TextWrapping="Wrap"/>
+    <StackPanel Margin="24" Spacing="0">
+        <TextBlock Text="Setup" FontSize="19" FontWeight="SemiBold" LetterSpacing="-0.2" Foreground="{StaticResource BrandText}"/>
+        <TextBlock Text="Your digital certificate, company details and the UJP environment."
+                   Classes="Muted" FontSize="13" Margin="0,4,0,18" TextWrapping="Wrap"/>
 
-        <Border Classes="Card" Padding="20">
-            <StackPanel Spacing="4">
+        <Border Classes="Card">
+            <StackPanel Spacing="0">
 
-                <Label Content="1. Digital Certificate Source" FontWeight="Bold" Foreground="{StaticResource BrandText}" Padding="0,0,0,6"/>
+                <!-- CERTIFICATE -->
+                <TextBlock Text="DIGITAL CERTIFICATE" Classes="SectionLabel" Margin="0,0,0,10"/>
 
-                <Grid ColumnDefinitions="*,110" Margin="0,0,0,8">
-                    <TextBox Text="{Binding CertThumbprint}" IsReadOnly="True" Classes="ReadOnlyField" Grid.Column="0"/>
-                    <Button Content="Load USB" Command="{Binding SelectUsbCertificateCommand}" Grid.Column="1" Classes="SecondaryActionBtn" Height="36" Margin="8,0,0,0"/>
+                <Label Content="USB token / Windows certificate store"/>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,12">
+                    <TextBox Grid.Column="0" Text="{Binding CertThumbprint}" IsReadOnly="True" Classes="ReadOnlyField"
+                             PlaceholderText="No certificate selected"/>
+                    <Button Grid.Column="1" Content="Load USB" Command="{Binding SelectUsbCertificateCommand}" Classes="SecondaryActionBtn"/>
                 </Grid>
 
-                <TextBlock Text="— OR —" HorizontalAlignment="Center" Foreground="{StaticResource TextMuted}" FontSize="11" FontWeight="Bold" Margin="0,2,0,8"/>
-
-                <Grid ColumnDefinitions="*,110" Margin="0,0,0,8">
-                    <TextBox Text="{Binding CertPath, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Classes="ReadOnlyField" Grid.Column="0"/>
-                    <Button Content="Browse .pfx" Command="{Binding BrowseCertificateCommand}" Grid.Column="1" Classes="SecondaryActionBtn" Height="36" Margin="8,0,0,0"/>
+                <Grid ColumnDefinitions="*,Auto,*" Margin="0,0,0,12">
+                    <Rectangle Grid.Column="0" Height="1" Fill="{StaticResource BorderLight}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="or" Foreground="{StaticResource TextFaint}" FontSize="11.5" Margin="10,0"/>
+                    <Rectangle Grid.Column="2" Height="1" Fill="{StaticResource BorderLight}" VerticalAlignment="Center"/>
                 </Grid>
 
-                <Label Content="PFX Password (leave blank if USB)" Margin="0,4,0,0"/>
-                <TextBox Text="{Binding CertPassword, UpdateSourceTrigger=PropertyChanged}" PasswordChar="•" Margin="0,0,0,16"/>
+                <Label Content=".pfx certificate file"/>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,0,0,12">
+                    <TextBox Grid.Column="0" Text="{Binding CertPath, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Classes="ReadOnlyField"
+                             PlaceholderText="No file selected"/>
+                    <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseCertificateCommand}" Classes="SecondaryActionBtn"/>
+                </Grid>
 
-                <Rectangle Height="1" Fill="{StaticResource BorderLight}" Margin="0,0,0,16"/>
+                <Label Content=".pfx password"/>
+                <TextBox Text="{Binding CertPassword, UpdateSourceTrigger=PropertyChanged}" PasswordChar="•"
+                         PlaceholderText="Leave blank when using a USB token"/>
 
-                <Label Content="2. Your Company EDB" FontWeight="Bold" Foreground="{StaticResource BrandText}"/>
-                <TextBox Text="{Binding SellerEdb, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14"/>
+                <Rectangle Height="1" Fill="{StaticResource BorderLight}" Margin="0,20,0,18"/>
 
-                <Label Content="3. EUJP-ID (From Portal)" FontWeight="Bold" Foreground="{StaticResource BrandText}"/>
-                <TextBox Text="{Binding EujpId, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14"/>
+                <!-- COMPANY -->
+                <TextBlock Text="COMPANY" Classes="SectionLabel" Margin="0,0,0,10"/>
 
-                <Label Content="4. Invoice Number Prefix (optional)" FontWeight="Bold" Foreground="{StaticResource BrandText}"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,0,0,12">
+                    <StackPanel Grid.Column="0">
+                        <Label Content="Company EDB"/>
+                        <TextBox Text="{Binding SellerEdb, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <Label Content="EUJP-ID (from the portal)"/>
+                        <TextBox Text="{Binding EujpId, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                </Grid>
+
+                <Label Content="Invoice number prefix (optional)"/>
                 <TextBox Text="{Binding InvoiceNumberPrefix, UpdateSourceTrigger=PropertyChanged}"
-                         Watermark="Leave blank for 2026-0001" Margin="0,0,0,14"/>
+                         PlaceholderText="Leave blank for 2026-0001"/>
 
-                <Rectangle Height="1" Fill="{StaticResource BorderLight}" Margin="0,0,0,16"/>
+                <Rectangle Height="1" Fill="{StaticResource BorderLight}" Margin="0,20,0,18"/>
 
-                <Label Content="5. Environment" FontWeight="Bold" Foreground="{StaticResource BrandText}"/>
-                <CheckBox Content="Use PRODUCTION (LIVE) environment — sends real fiscal invoices"
-                          IsChecked="{Binding UseProductionEnvironment}" Margin="0,4,0,4"/>
-                <TextBlock Text="Leave unchecked to use the UJP TEST sandbox."
-                           Foreground="{StaticResource TextMuted}" FontSize="11.5" Margin="0,0,0,20"/>
+                <!-- ENVIRONMENT -->
+                <TextBlock Text="ENVIRONMENT" Classes="SectionLabel" Margin="0,0,0,8"/>
+                <CheckBox Content="Send to PRODUCTION (live) — real fiscal invoices"
+                          IsChecked="{Binding UseProductionEnvironment}"/>
+                <TextBlock Text="Leave unchecked to use the UJP test sandbox."
+                           Classes="Muted" FontSize="12" Margin="28,0,0,20"/>
 
-                <Button Content="Verify &amp; Save Setup"
+                <Button Content="Verify &amp; save"
                         Command="{Binding SaveAndVerifyCommand}"
-                        Classes="PrimaryActionBtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                        Classes="PrimaryActionBtn" HorizontalAlignment="Stretch"/>
 
-                <TextBlock Text="{Binding StatusMessage}" Margin="0,14,0,0" Foreground="{StaticResource BrandDanger}"
-                           TextWrapping="Wrap" HorizontalAlignment="Center" FontSize="12"/>
+                <TextBlock Text="{Binding StatusMessage}" Classes="StatusNote" Margin="0,12,0,0" TextAlignment="Center"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static converters:StringConverters.IsNotNullOrEmpty}}"/>
             </StackPanel>
         </Border>
     </StackPanel>
