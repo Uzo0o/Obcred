@@ -2,100 +2,109 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:viewModels="clr-namespace:Obcred.ViewModels"
              xmlns:converters="using:Avalonia.Data.Converters"
+             xmlns:local="using:Obcred.Converters"
              x:DataType="viewModels:HistoryViewModel"
              x:Class="Obcred.Views.InvoiceHistoryView">
 
-    <Grid Classes="PageRoot" Margin="28,24,28,28" RowDefinitions="Auto,*">
-        <Grid.RenderTransform>
-            <TranslateTransform/>
-        </Grid.RenderTransform>
+    <Grid Classes="PageRoot" Margin="24,20,24,24" ColumnDefinitions="1.6*,1*" ColumnSpacing="16">
 
-        <!-- TITLE + REFRESH -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
-            <TextBlock Grid.Column="0" Text="Invoice History" Classes="PageTitleStyle" Margin="0"/>
-            <Button Grid.Column="1" Command="{Binding LoadCommand}" Classes="PrimaryActionBtn" VerticalAlignment="Top">
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <PathIcon Data="{StaticResource IconHistory}" Width="15" Height="15" VerticalAlignment="Center"/>
-                    <TextBlock Text="Refresh" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-        </Grid>
+        <!-- LEFT: list of submitted invoices -->
+        <Border Grid.Column="0" Classes="Card" Padding="0">
+            <Grid RowDefinitions="Auto,*">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="20,14,16,12">
+                    <TextBlock Grid.Column="0" Text="Submitted invoices" Classes="CardHeaderStyle"/>
+                    <Button Grid.Column="1" Command="{Binding LoadCommand}" Classes="SecondaryActionBtn" Padding="10,0" ToolTip.Tip="Refresh">
+                        <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                            <PathIcon Data="{StaticResource IconRefresh}" Width="14" Height="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
 
-        <!-- LIST + DETAIL -->
-        <Grid Grid.Row="1" ColumnDefinitions="1.6*,1*">
+                <Border Grid.Row="1" BorderBrush="{StaticResource BorderLight}" BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,10,10" ClipToBounds="True">
+                    <Panel>
+                        <DataGrid ItemsSource="{Binding Invoices}"
+                                  SelectedItem="{Binding SelectedInvoice}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  BorderThickness="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Invoice No." Binding="{Binding DocNumber}" Width="130"/>
+                                <DataGridTextColumn Header="Date" Binding="{Binding IssueDate}" Width="115"/>
+                                <DataGridTextColumn Header="Buyer" Binding="{Binding BuyerName}" Width="*"/>
+                                <DataGridTextColumn Header="Total" Binding="{Binding GrossAmount, StringFormat='{}{0:N2}'}" Width="130"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
 
-            <!-- LEFT: list of submitted invoices -->
-            <Border Grid.Column="0" Classes="Card" Padding="12" Margin="0,0,16,0">
-                <DataGrid ItemsSource="{Binding Invoices}"
-                          SelectedItem="{Binding SelectedInvoice}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          GridLinesVisibility="Horizontal"
-                          BorderThickness="0">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Invoice No." Binding="{Binding DocNumber}" Width="*"/>
-                        <DataGridTextColumn Header="Date" Binding="{Binding IssueDate}" Width="110"/>
-                        <DataGridTextColumn Header="Buyer" Binding="{Binding BuyerName}" Width="1.4*"/>
-                        <DataGridTextColumn Header="Total"
-                                            Binding="{Binding GrossAmount, StringFormat='{}{0:N2}'}"
-                                            Width="120"/>
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Border>
+                        <StackPanel Classes="EmptyState"
+                                    IsVisible="{Binding Invoices.Count, Converter={x:Static local:IsZeroConverter.Instance}}">
+                            <PathIcon Data="{StaticResource IconHistory}"/>
+                            <TextBlock Text="No submitted invoices yet."/>
+                        </StackPanel>
+                    </Panel>
+                </Border>
+            </Grid>
+        </Border>
 
-            <!-- RIGHT: detail of the selected invoice -->
-            <Border Grid.Column="1" Classes="Card">
-                <ScrollViewer>
+        <!-- RIGHT: detail of the selected invoice -->
+        <Border Grid.Column="1" Classes="Card">
+            <Panel>
+                <ScrollViewer IsVisible="{Binding SelectedInvoice, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                            <Border Classes="CardHeaderAccent"/>
-                            <TextBlock Text="Selected Invoice" Classes="CardHeaderStyle" Margin="0"/>
-                        </StackPanel>
+                        <TextBlock Text="{Binding SelectedInvoice.DocNumber}" Classes="CardHeaderStyle" FontSize="17"/>
+                        <TextBlock Text="{Binding SelectedInvoice.BuyerName}" Classes="Muted" Margin="0,2,0,16"/>
 
-                        <StackPanel IsVisible="{Binding SelectedInvoice, Converter={x:Static converters:ObjectConverters.IsNotNull}}" Spacing="4">
-                            <TextBlock Text="{Binding SelectedInvoice.DocNumber, StringFormat='No.: {0}'}"
-                                       FontWeight="SemiBold" Foreground="{StaticResource BrandText}"/>
-                            <TextBlock Text="{Binding SelectedInvoice.BuyerName, StringFormat='Buyer: {0}'}"
-                                       Foreground="{StaticResource TextMuted}"/>
-                            <TextBlock Text="{Binding SelectedInvoice.IssueDate, StringFormat='Issued: {0}'}"
-                                       Foreground="{StaticResource TextMuted}"/>
-                            <TextBlock Text="{Binding SelectedInvoice.GrossAmount, StringFormat='Total: {0:N2} MKD'}"
-                                       Foreground="{StaticResource TextMuted}"/>
-                            <TextBlock Text="{Binding SelectedInvoice.Status, StringFormat='Status: {0}'}"
-                                       FontWeight="Bold" Foreground="{StaticResource BrandAccent}" Margin="0,0,0,8"/>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="12" Margin="0,0,0,18">
+                            <StackPanel Grid.Row="0" Grid.Column="0">
+                                <Label Content="Issued"/>
+                                <TextBlock Text="{Binding SelectedInvoice.IssueDate}" Classes="FieldValue"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1">
+                                <Label Content="Status"/>
+                                <TextBlock Text="{Binding SelectedInvoice.Status}" Classes="FieldValue"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                                <Label Content="Total"/>
+                                <TextBlock Text="{Binding SelectedInvoice.GrossAmount, StringFormat='{}{0:N2} MKD'}" Classes="FieldValue" FontSize="16" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Grid>
 
-                            <Button Command="{Binding ExportPdfCommand}" Classes="SecondaryActionBtn" HorizontalAlignment="Left" Margin="0,4,0,8">
-                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <PathIcon Data="{StaticResource IconSave}" Width="15" Height="15" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Save PDF" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandSuccess}"
-                                       TextWrapping="Wrap" FontSize="12" Margin="0,0,0,12"/>
+                        <Button Command="{Binding ExportPdfCommand}" Classes="SecondaryActionBtn" HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <PathIcon Data="{StaticResource IconSave}" Width="14" Height="14" VerticalAlignment="Center"/>
+                                <TextBlock Text="Save PDF" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding StatusMessage}" Classes="StatusNote" Margin="0,8,0,0"
+                                   IsVisible="{Binding StatusMessage, Converter={x:Static converters:StringConverters.IsNotNullOrEmpty}}"/>
 
-                            <TextBlock Text="UJP Response" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}"
-                                       FontSize="12" Margin="0,0,0,4"/>
-                            <Border Background="{StaticResource InputBackground}" CornerRadius="8" Padding="10" Margin="0,0,0,12">
-                                <SelectableTextBlock Text="{Binding SelectedInvoice.UjpResponse}"
-                                                     TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource BrandText}"/>
-                            </Border>
+                        <Rectangle Height="1" Fill="{StaticResource BorderLight}" Margin="0,18,0,16"/>
 
-                            <TextBlock Text="Signed Document (JWS)" FontWeight="SemiBold" Foreground="{StaticResource TextMuted}"
-                                       FontSize="12" Margin="0,0,0,4"/>
-                            <Border Background="{StaticResource InputBackground}" CornerRadius="8" Padding="10">
-                                <SelectableTextBlock Text="{Binding SelectedInvoice.SignedJws}"
-                                                     TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextMuted}"
-                                                     MaxHeight="160"/>
-                            </Border>
-                        </StackPanel>
+                        <TextBlock Text="UJP RESPONSE" Classes="SectionLabel" Margin="0,0,0,6"/>
+                        <Border Background="{StaticResource SurfaceSubtle}" BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
+                                CornerRadius="6" Padding="10" Margin="0,0,0,14">
+                            <SelectableTextBlock Text="{Binding SelectedInvoice.UjpResponse}"
+                                                 TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource BrandText}"/>
+                        </Border>
 
-                        <TextBlock Text="Select an invoice to see its details."
-                                   Foreground="#94A3B8" FontSize="13"
-                                   IsVisible="{Binding SelectedInvoice, Converter={x:Static converters:ObjectConverters.IsNull}}"/>
+                        <TextBlock Text="SIGNED DOCUMENT (JWS)" Classes="SectionLabel" Margin="0,0,0,6"/>
+                        <Border Background="{StaticResource SurfaceSubtle}" BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
+                                CornerRadius="6" Padding="10">
+                            <SelectableTextBlock Text="{Binding SelectedInvoice.SignedJws}"
+                                                 TextWrapping="Wrap" FontSize="11" FontFamily="Consolas, Courier New, monospace"
+                                                 Foreground="{StaticResource TextMuted}" MaxHeight="160"/>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
-            </Border>
-        </Grid>
+
+                <StackPanel Classes="EmptyState"
+                            IsVisible="{Binding SelectedInvoice, Converter={x:Static converters:ObjectConverters.IsNull}}">
+                    <PathIcon Data="{StaticResource Document}"/>
+                    <TextBlock Text="Select an invoice to see its details."/>
+                </StackPanel>
+            </Panel>
+        </Border>
     </Grid>
 </UserControl>

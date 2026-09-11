@@ -1,34 +1,39 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         mc:Ignorable="d"
         x:Class="Obcred.Views.OverageWarningWindow"
         Title="Plan limit reached — Obcred"
+        Icon="/logo64.ico"
         Width="420"
         SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource BrandBackground}">
+        Background="{StaticResource SurfaceWhite}">
 
-    <StackPanel Margin="28" Spacing="4">
+    <StackPanel Margin="24" Spacing="0">
 
-        <TextBlock x:Name="TitleText" FontSize="17" FontWeight="Bold"
+        <TextBlock x:Name="TitleText" FontSize="17" FontWeight="SemiBold" LetterSpacing="-0.2"
                    Foreground="{StaticResource BrandText}" TextWrapping="Wrap"/>
 
         <TextBlock x:Name="IntroText" FontSize="13" Foreground="{StaticResource TextMuted}"
-                   TextWrapping="Wrap" Margin="0,10,0,4"/>
-        <TextBlock x:Name="CostText" FontSize="13" FontWeight="SemiBold"
-                   Foreground="{StaticResource BrandDanger}" TextWrapping="Wrap" Margin="0,0,0,4"/>
-        <TextBlock x:Name="ChoiceText" FontSize="12.5" Foreground="{StaticResource TextMuted}"
-                   TextWrapping="Wrap" Margin="0,0,0,20"/>
+                   TextWrapping="Wrap" Margin="0,10,0,10" LineHeight="19"/>
 
-        <StackPanel Spacing="8">
-            <Button x:Name="ChoosePlanButton" Content="Choose a plan instead"
+        <Border Background="{StaticResource DangerSoft}" CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
+            <TextBlock x:Name="CostText" FontSize="13" FontWeight="Medium"
+                       Foreground="{StaticResource BrandDanger}" TextWrapping="Wrap"/>
+        </Border>
+
+        <TextBlock x:Name="ChoiceText" FontSize="12.5" Foreground="{StaticResource TextMuted}"
+                   TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="18"/>
+
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+            <Button Grid.Column="0" x:Name="ChoosePlanButton" Content="Choose a plan"
                     Classes="SecondaryActionBtn" HorizontalAlignment="Stretch"/>
-            <Button x:Name="StayOnPlanButton"
+            <Button Grid.Column="1" x:Name="StayOnPlanButton"
                     Classes="PrimaryActionBtn" HorizontalAlignment="Stretch"/>
-        </StackPanel>
+        </Grid>
 
     </StackPanel>
 </Window>

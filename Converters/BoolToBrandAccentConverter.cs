@@ -16,7 +16,7 @@ public class BoolToBrandAccentConverter : IValueConverter
     public static readonly BoolToBrandAccentConverter Instance = new();
 
     private static readonly IBrush Accent = new SolidColorBrush(Color.Parse("#2E86FF"));
-    private static readonly IBrush Light = new SolidColorBrush(Color.Parse("#E2E8F0"));
+    private static readonly IBrush Light = new SolidColorBrush(Color.Parse("#E4E8EF"));
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         => value is true ? Accent : Light;
