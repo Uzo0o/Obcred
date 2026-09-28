@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text.Json;
 using Obcred.Models;
@@ -7,19 +7,37 @@ namespace Obcred.Services;
 
 public class UserSettingsService : IUserSettingsService
 {
-    private readonly string _settingsFilePath;
-    public UserSettings CurrentSettings { get; private set; }
+    private readonly string _appDataFolder;
+    private string _settingsFilePath = string.Empty;
+    public UserSettings CurrentSettings { get; private set; } = new();
 
     public UserSettingsService()
     {
         // This gets the C:\Users\Username\AppData\Local folder
         string appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        
+
         // Create a dedicated folder for your software
-        string myAppFolder = Path.Combine(appDataFolder, "IntegritiEFakturi");
-        Directory.CreateDirectory(myAppFolder); // Creates it if it doesn't exist
-        
-        _settingsFilePath = Path.Combine(myAppFolder, "user-settings.json");
+        _appDataFolder = Path.Combine(appDataFolder, "IntegritiEFakturi");
+        Directory.CreateDirectory(_appDataFolder); // Creates it if it doesn't exist
+
+        // Settings aren't loaded here — we don't know which account is signed
+        // in yet. SwitchUser loads the right file once we do.
+    }
+
+    /// <summary>
+    /// Points this service at the signed-in account's own settings file. Every
+    /// account starts blank — no cert, no EDB — and has to go through Settings
+    /// itself; two Google accounts must never end up submitting under the same
+    /// company by inheriting old cert/EDB data. The pre-multi-account file is
+    /// left untouched on disk purely as a manual-recovery backup. Safe to call
+    /// again on a logout -> different account login within the same run.
+    /// </summary>
+    public void SwitchUser(string userId)
+    {
+        string userFolder = Path.Combine(_appDataFolder, "Users", UserStorageKey.From(userId));
+        Directory.CreateDirectory(userFolder);
+        _settingsFilePath = Path.Combine(userFolder, "user-settings.json");
+
         LoadSettings();
     }
 
@@ -50,6 +68,9 @@ public class UserSettingsService : IUserSettingsService
 
     public void SaveSettings(UserSettings settings)
     {
+        if (string.IsNullOrEmpty(_settingsFilePath))
+            throw new InvalidOperationException("UserSettingsService used before SwitchUser — no account is signed in yet.");
+
         // Keep the plaintext password in memory for use this session...
         CurrentSettings = settings;
 
@@ -68,9 +89,9 @@ public class UserSettingsService : IUserSettingsService
     public bool IsConfigured()
     {
         // Check if they have EITHER a File OR a USB Thumbprint
-        bool hasCert = !string.IsNullOrWhiteSpace(CurrentSettings.CertPath) || 
+        bool hasCert = !string.IsNullOrWhiteSpace(CurrentSettings.CertPath) ||
                        !string.IsNullOrWhiteSpace(CurrentSettings.CertThumbprint);
-                       
+
         // They must have a cert AND an EDB
         return hasCert && !string.IsNullOrWhiteSpace(CurrentSettings.SellerEdb);
     }

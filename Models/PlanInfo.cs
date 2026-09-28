@@ -13,8 +13,8 @@ public class PlanInfo
     [JsonPropertyName("price")] public int Price { get; set; }
 
     public string DisplayName => char.ToUpper(Id[0]) + Id[1..];
-    public string LimitLabel => Limit is null ? "Unlimited invoices" : $"{Limit} invoices/month";
-    public string PriceLabel => Price == 0 ? "Free" : $"{Price} MKD/month";
+    public string LimitLabel => Limit is null ? "Неограничени фактури" : $"{Limit} фактури/месец";
+    public string PriceLabel => Price == 0 ? "Бесплатно" : $"{Price} МКД/месец";
 }
 
 internal class PlansResponse

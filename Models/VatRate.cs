@@ -21,12 +21,11 @@ public static class VatRates
 {
     public static readonly VatRate Standard = new() { DisplayName = "18%", ApiCode = "DDV-A", Percent = 18.0m };
 
-    // North Macedonia's 10% rate.
-    // TODO: verify "DDV-V" is the correct UJP indicator for 10% against the UJP wiki before going live.
+    // North Macedonia's 10% rate. "DDV-V" confirmed against the UJP wiki's шифрарници codelist.
     public static readonly VatRate Reduced10 = new() { DisplayName = "10%", ApiCode = "DDV-V", Percent = 10.0m };
 
     public static readonly VatRate Reduced5 = new() { DisplayName = "5%", ApiCode = "DDV-B", Percent = 5.0m };
-    public static readonly VatRate Exempt = new() { DisplayName = "0% (Exempt)", ApiCode = "DDV-G", Percent = 0.0m };
+    public static readonly VatRate Exempt = new() { DisplayName = "0% (Ослободено)", ApiCode = "DDV-G", Percent = 0.0m };
 
     public static readonly IReadOnlyList<VatRate> All = new[] { Standard, Reduced10, Reduced5, Exempt };
 

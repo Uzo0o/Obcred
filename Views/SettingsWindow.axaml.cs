@@ -19,11 +19,11 @@ public partial class SettingsWindow : Window
     {
         var files = await owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Select your .pfx certificate",
+            Title = "Изберете го вашиот .pfx сертификат",
             AllowMultiple = false,
             FileTypeFilter = new[]
             {
-                new FilePickerFileType("Certificate (*.pfx, *.p12)")
+                new FilePickerFileType("Сертификат (*.pfx, *.p12)")
                 {
                     Patterns = new[] { "*.pfx", "*.p12" }
                 }

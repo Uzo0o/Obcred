@@ -13,4 +13,7 @@ public interface ISessionContext
 {
     GoogleAuthResult? Current { get; }
     void SetCurrent(GoogleAuthResult session);
+
+    /// <summary>Drops the in-memory session on logout. Does not touch the cached-session file on disk.</summary>
+    void Clear();
 }

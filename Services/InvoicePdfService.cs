@@ -15,6 +15,11 @@ public class InvoicePdfService : IInvoicePdfService
     {
         // QuestPDF Community license (free for organizations under the revenue threshold).
         QuestPDF.Settings.License = LicenseType.Community;
+#if DEBUG
+        // Turns a generic "conflicting size constraints" message into one that names
+        // the actual offending element/location — debug builds only (has a perf cost).
+        QuestPDF.Settings.EnableDebugging = true;
+#endif
     }
 
     // "Arial" is chosen because it ships on Windows with full Cyrillic coverage,
@@ -31,7 +36,7 @@ public class InvoicePdfService : IInvoicePdfService
     public byte[] Generate(InvoicePdfModel model)
     {
         var settings = _settingsService.CurrentSettings;
-        return Generate(model, settings.PdfTemplate, settings.PdfLogoPath);
+        return Generate(model, settings.PdfTemplate, settings.PdfLogoPath, settings.PdfAccentColorId);
     }
 
     public void Save(InvoicePdfModel model, string filePath)
@@ -39,14 +44,14 @@ public class InvoicePdfService : IInvoicePdfService
         File.WriteAllBytes(filePath, Generate(model));
     }
 
-    public byte[] Generate(InvoicePdfModel model, string templateId, string? logoPath)
+    public byte[] Generate(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null)
     {
-        return BuildDocument(model, templateId, TryLoadLogo(logoPath)).GeneratePdf();
+        return BuildDocument(model, templateId, TryLoadLogo(logoPath), PdfAccentColor.FromId(accentColorId)).GeneratePdf();
     }
 
-    public byte[] GeneratePreviewImage(InvoicePdfModel model, string templateId, string? logoPath)
+    public byte[] GeneratePreviewImage(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null)
     {
-        return BuildDocument(model, templateId, TryLoadLogo(logoPath))
+        return BuildDocument(model, templateId, TryLoadLogo(logoPath), PdfAccentColor.FromId(accentColorId))
             .GenerateImages()
             .First();
     }
@@ -67,7 +72,7 @@ public class InvoicePdfService : IInvoicePdfService
         }
     }
 
-    private static IDocument BuildDocument(InvoicePdfModel model, string templateId, byte[]? logo)
+    private static IDocument BuildDocument(InvoicePdfModel model, string templateId, byte[]? logo, PdfAccentColor accent)
     {
         return Document.Create(container =>
         {
@@ -79,13 +84,13 @@ public class InvoicePdfService : IInvoicePdfService
                 switch (templateId)
                 {
                     case "Modern":
-                        ComposeModern(page, model, logo);
+                        ComposeModern(page, model, logo, accent);
                         break;
                     case "Minimal":
-                        ComposeMinimal(page, model, logo);
+                        ComposeMinimal(page, model, logo, accent);
                         break;
                     default:
-                        ComposeClassic(page, model, logo);
+                        ComposeClassic(page, model, logo, accent);
                         break;
                 }
             });
@@ -95,7 +100,7 @@ public class InvoicePdfService : IInvoicePdfService
     // ======================================================================
     // CLASSIC — bordered seller/buyer boxes, ruled table, navy accents
     // ======================================================================
-    private static void ComposeClassic(PageDescriptor page, InvoicePdfModel model, byte[]? logo)
+    private static void ComposeClassic(PageDescriptor page, InvoicePdfModel model, byte[]? logo, PdfAccentColor accent)
     {
         page.Margin(36);
 
@@ -108,14 +113,14 @@ public class InvoicePdfService : IInvoicePdfService
 
                 row.RelativeItem().PaddingLeft(logo != null ? 12 : 0).Column(c =>
                 {
-                    c.Item().Text(model.DocTypeName).FontSize(20).Bold().FontColor("#1B3A6B");
-                    c.Item().Text($"Бр. / No.: {model.DocNumber}").FontSize(11);
+                    c.Item().Text(model.DocTypeName).FontSize(20).Bold().FontColor(accent.Dark);
+                    c.Item().Text($"Бр.: {model.DocNumber}").FontSize(11);
                 });
 
                 row.ConstantItem(200).Column(c =>
                 {
-                    c.Item().AlignRight().Text($"Датум / Date: {model.IssueDate}");
-                    c.Item().AlignRight().Text($"Промет / Turnover: {model.TurnoverDate}");
+                    c.Item().AlignRight().Text($"Датум: {model.IssueDate}");
+                    c.Item().AlignRight().Text($"Датум на промет: {model.TurnoverDate}");
                 });
             });
 
@@ -126,10 +131,10 @@ public class InvoicePdfService : IInvoicePdfService
         {
             col.Item().PaddingBottom(12).Row(row =>
             {
-                row.RelativeItem().Element(c => ClassicParty(c, "Издавач / Seller",
+                row.RelativeItem().Element(c => ClassicParty(c, "Продавач",
                     model.SellerName, model.SellerEdb, model.SellerVatNumber, model.SellerAddress));
                 row.ConstantItem(20);
-                row.RelativeItem().Element(c => ClassicParty(c, "Купувач / Buyer",
+                row.RelativeItem().Element(c => ClassicParty(c, "Купувач",
                     model.BuyerName, model.BuyerEdb, model.BuyerVatNumber, model.BuyerAddress));
             });
 
@@ -148,13 +153,13 @@ public class InvoicePdfService : IInvoicePdfService
 
                 table.Header(header =>
                 {
-                    ClassicHeaderCell(header, "#");
-                    ClassicHeaderCell(header, "Опис / Description");
-                    ClassicHeaderCell(header, "Кол.");
-                    ClassicHeaderCell(header, "Цена");
-                    ClassicHeaderCell(header, "ДДВ");
-                    ClassicHeaderCell(header, "Основа");
-                    ClassicHeaderCell(header, "Вкупно");
+                    ClassicHeaderCell(header, "#", accent);
+                    ClassicHeaderCell(header, "Опис", accent);
+                    ClassicHeaderCell(header, "Кол.", accent);
+                    ClassicHeaderCell(header, "Цена", accent);
+                    ClassicHeaderCell(header, "ДДВ", accent);
+                    ClassicHeaderCell(header, "Основа", accent);
+                    ClassicHeaderCell(header, "Вкупно", accent);
                 });
 
                 foreach (var line in model.Lines)
@@ -171,9 +176,9 @@ public class InvoicePdfService : IInvoicePdfService
 
             col.Item().PaddingTop(12).AlignRight().Column(c =>
             {
-                TotalsRow(c, "Основа / Subtotal:", Num(model.NetAmount), model.Currency, false);
-                TotalsRow(c, "ДДВ / VAT:", Num(model.VatAmount), model.Currency, false);
-                TotalsRow(c, "Вкупно / Total:", Num(model.GrossAmount), model.Currency, true);
+                TotalsRow(c, "Основа:", Num(model.NetAmount), model.Currency, false, accent);
+                TotalsRow(c, "ДДВ:", Num(model.VatAmount), model.Currency, false, accent);
+                TotalsRow(c, "Вкупно:", Num(model.GrossAmount), model.Currency, true, accent);
             });
         });
 
@@ -195,15 +200,15 @@ public class InvoicePdfService : IInvoicePdfService
             c.Item().PaddingTop(2).Text(name).Bold();
             if (!string.IsNullOrWhiteSpace(address))
                 c.Item().Text(address);
-            c.Item().Text($"ЕДБ / EDB: {edb}");
+            c.Item().Text($"ЕДБ: {edb}");
             if (!string.IsNullOrWhiteSpace(vat))
-                c.Item().Text($"ДДВ бр. / VAT: {vat}");
+                c.Item().Text($"ДДВ бр.: {vat}");
         });
     }
 
-    private static void ClassicHeaderCell(TableCellDescriptor header, string text)
+    private static void ClassicHeaderCell(TableCellDescriptor header, string text, PdfAccentColor accent)
     {
-        header.Cell().Background("#F1F5F9").Padding(5)
+        header.Cell().Background(accent.Light).Padding(5)
             .Text(text).FontSize(9).Bold().FontColor("#64748B");
     }
 
@@ -215,11 +220,11 @@ public class InvoicePdfService : IInvoicePdfService
     // ======================================================================
     // MODERN — bold accent header band, logo in-band, shaded table rows
     // ======================================================================
-    private static void ComposeModern(PageDescriptor page, InvoicePdfModel model, byte[]? logo)
+    private static void ComposeModern(PageDescriptor page, InvoicePdfModel model, byte[]? logo, PdfAccentColor accent)
     {
         page.Margin(0);
 
-        page.Header().Background("#1B3A6B").Padding(28).Row(row =>
+        page.Header().Background(accent.Dark).Padding(28).Row(row =>
         {
             if (logo != null)
             {
@@ -230,13 +235,13 @@ public class InvoicePdfService : IInvoicePdfService
             row.RelativeItem().Column(c =>
             {
                 c.Item().Text(model.DocTypeName).FontSize(22).Bold().FontColor(Colors.White);
-                c.Item().Text($"No. {model.DocNumber}").FontSize(11).FontColor("#B9CCE8");
+                c.Item().Text($"Бр. {model.DocNumber}").FontSize(11).FontColor(accent.Mid);
             });
 
             row.ConstantItem(190).Column(c =>
             {
-                c.Item().AlignRight().Text($"Date: {model.IssueDate}").FontColor(Colors.White);
-                c.Item().AlignRight().Text($"Turnover: {model.TurnoverDate}").FontColor("#B9CCE8");
+                c.Item().AlignRight().Text($"Датум: {model.IssueDate}").FontColor(Colors.White);
+                c.Item().AlignRight().Text($"Промет: {model.TurnoverDate}").FontColor(accent.Mid);
             });
         });
 
@@ -244,11 +249,11 @@ public class InvoicePdfService : IInvoicePdfService
         {
             col.Item().PaddingBottom(16).Row(row =>
             {
-                row.RelativeItem().Element(c => ModernParty(c, "SELLER",
-                    model.SellerName, model.SellerEdb, model.SellerVatNumber, model.SellerAddress));
+                row.RelativeItem().Element(c => ModernParty(c, "ПРОДАВАЧ",
+                    model.SellerName, model.SellerEdb, model.SellerVatNumber, model.SellerAddress, accent));
                 row.ConstantItem(20);
-                row.RelativeItem().Element(c => ModernParty(c, "BUYER",
-                    model.BuyerName, model.BuyerEdb, model.BuyerVatNumber, model.BuyerAddress));
+                row.RelativeItem().Element(c => ModernParty(c, "КУПУВАЧ",
+                    model.BuyerName, model.BuyerEdb, model.BuyerVatNumber, model.BuyerAddress, accent));
             });
 
             col.Item().Table(table =>
@@ -266,19 +271,19 @@ public class InvoicePdfService : IInvoicePdfService
 
                 table.Header(header =>
                 {
-                    ModernHeaderCell(header, "#");
-                    ModernHeaderCell(header, "Description");
-                    ModernHeaderCell(header, "Qty");
-                    ModernHeaderCell(header, "Price");
-                    ModernHeaderCell(header, "VAT");
-                    ModernHeaderCell(header, "Net");
-                    ModernHeaderCell(header, "Total");
+                    ModernHeaderCell(header, "#", accent);
+                    ModernHeaderCell(header, "Опис", accent);
+                    ModernHeaderCell(header, "Кол.", accent);
+                    ModernHeaderCell(header, "Цена", accent);
+                    ModernHeaderCell(header, "ДДВ", accent);
+                    ModernHeaderCell(header, "Основа", accent);
+                    ModernHeaderCell(header, "Вкупно", accent);
                 });
 
                 for (int i = 0; i < model.Lines.Count; i++)
                 {
                     var line = model.Lines[i];
-                    string bg = i % 2 == 0 ? Colors.White : "#F4F7FC";
+                    string bg = i % 2 == 0 ? Colors.White : accent.Light;
 
                     ModernBodyCell(table, bg).Text(line.LineNo.ToString());
                     ModernBodyCell(table, bg).Text(line.Description);
@@ -290,16 +295,19 @@ public class InvoicePdfService : IInvoicePdfService
                 }
             });
 
-            col.Item().PaddingTop(16).AlignRight().Width(240).Background("#F4F7FC").Padding(14).Column(c =>
+            // 268 = 240 (TotalsRow's own fixed row width) + 14pt padding on each side below —
+            // TotalsRow always demands exactly 240pt, so the box around it must leave that
+            // much AFTER its own padding, or QuestPDF's layout throws a conflicting-size error.
+            col.Item().PaddingTop(16).AlignRight().Width(268).Background(accent.Light).Padding(14).Column(c =>
             {
-                TotalsRow(c, "Subtotal:", Num(model.NetAmount), model.Currency, false);
-                TotalsRow(c, "VAT:", Num(model.VatAmount), model.Currency, false);
+                TotalsRow(c, "Основа:", Num(model.NetAmount), model.Currency, false, accent);
+                TotalsRow(c, "ДДВ:", Num(model.VatAmount), model.Currency, false, accent);
                 c.Item().PaddingTop(4).LineHorizontal(1).LineColor("#E2E8F0");
                 c.Item().PaddingTop(4).Row(r =>
                 {
-                    r.RelativeItem().Text("Total:").Bold().FontSize(12);
+                    r.RelativeItem().Text("Вкупно:").Bold().FontSize(12);
                     r.ConstantItem(110).AlignRight().Text($"{Num(model.GrossAmount)} {model.Currency}")
-                        .Bold().FontSize(13).FontColor("#2E86FF");
+                        .Bold().FontSize(13).FontColor(accent.Mid);
                 });
             });
         });
@@ -307,7 +315,7 @@ public class InvoicePdfService : IInvoicePdfService
         page.Footer().PaddingBottom(20).AlignCenter().Text(t =>
         {
             t.DefaultTextStyle(s => s.FontColor("#94A3B8").FontSize(9));
-            t.Span("Page ");
+            t.Span("Страна ");
             t.CurrentPageNumber();
             t.Span(" / ");
             t.TotalPages();
@@ -315,23 +323,23 @@ public class InvoicePdfService : IInvoicePdfService
     }
 
     private static void ModernParty(IContainer container, string title,
-        string name, string edb, string vat, string address)
+        string name, string edb, string vat, string address, PdfAccentColor accent)
     {
-        container.Background("#F4F7FC").Padding(12).Column(c =>
+        container.Background(accent.Light).Padding(12).Column(c =>
         {
-            c.Item().Text(title).FontSize(9).Bold().FontColor("#2E86FF").LetterSpacing(0.05f);
+            c.Item().Text(title).FontSize(9).Bold().FontColor(accent.Mid).LetterSpacing(0.05f);
             c.Item().PaddingTop(3).Text(name).Bold();
             if (!string.IsNullOrWhiteSpace(address))
                 c.Item().Text(address);
-            c.Item().Text($"EDB: {edb}");
+            c.Item().Text($"ЕДБ: {edb}");
             if (!string.IsNullOrWhiteSpace(vat))
-                c.Item().Text($"VAT: {vat}");
+                c.Item().Text($"ДДВ: {vat}");
         });
     }
 
-    private static void ModernHeaderCell(TableCellDescriptor header, string text)
+    private static void ModernHeaderCell(TableCellDescriptor header, string text, PdfAccentColor accent)
     {
-        header.Cell().Background("#1B3A6B").Padding(6)
+        header.Cell().Background(accent.Dark).Padding(6)
             .Text(text).FontSize(9).Bold().FontColor(Colors.White);
     }
 
@@ -343,7 +351,7 @@ public class InvoicePdfService : IInvoicePdfService
     // ======================================================================
     // MINIMAL — no borders/shading, thin dividers, generous whitespace
     // ======================================================================
-    private static void ComposeMinimal(PageDescriptor page, InvoicePdfModel model, byte[]? logo)
+    private static void ComposeMinimal(PageDescriptor page, InvoicePdfModel model, byte[]? logo, PdfAccentColor accent)
     {
         page.Margin(44);
 
@@ -363,18 +371,18 @@ public class InvoicePdfService : IInvoicePdfService
         {
             col.Item().Row(row =>
             {
-                row.RelativeItem().Text($"Date: {model.IssueDate}").FontSize(9).FontColor("#94A3B8");
-                row.RelativeItem().AlignRight().Text($"Turnover: {model.TurnoverDate}").FontSize(9).FontColor("#94A3B8");
+                row.RelativeItem().Text($"Датум: {model.IssueDate}").FontSize(9).FontColor("#94A3B8");
+                row.RelativeItem().AlignRight().Text($"Промет: {model.TurnoverDate}").FontSize(9).FontColor("#94A3B8");
             });
 
             col.Item().PaddingVertical(16).LineHorizontal(0.5f).LineColor("#E2E8F0");
 
             col.Item().PaddingBottom(20).Row(row =>
             {
-                row.RelativeItem().Element(c => MinimalParty(c, "Seller",
+                row.RelativeItem().Element(c => MinimalParty(c, "Продавач",
                     model.SellerName, model.SellerEdb, model.SellerVatNumber, model.SellerAddress));
                 row.ConstantItem(30);
-                row.RelativeItem().Element(c => MinimalParty(c, "Buyer",
+                row.RelativeItem().Element(c => MinimalParty(c, "Купувач",
                     model.BuyerName, model.BuyerEdb, model.BuyerVatNumber, model.BuyerAddress));
             });
 
@@ -391,11 +399,11 @@ public class InvoicePdfService : IInvoicePdfService
 
                 table.Header(header =>
                 {
-                    MinimalHeaderCell(header, "Description");
-                    MinimalHeaderCell(header, "Qty");
-                    MinimalHeaderCell(header, "Price");
-                    MinimalHeaderCell(header, "VAT");
-                    MinimalHeaderCell(header, "Total");
+                    MinimalHeaderCell(header, "Опис");
+                    MinimalHeaderCell(header, "Кол.");
+                    MinimalHeaderCell(header, "Цена");
+                    MinimalHeaderCell(header, "ДДВ");
+                    MinimalHeaderCell(header, "Вкупно");
                 });
 
                 foreach (var line in model.Lines)
@@ -410,13 +418,14 @@ public class InvoicePdfService : IInvoicePdfService
 
             col.Item().PaddingTop(18).AlignRight().Column(c =>
             {
-                TotalsRow(c, "Subtotal", Num(model.NetAmount), model.Currency, false);
-                TotalsRow(c, "VAT", Num(model.VatAmount), model.Currency, false);
+                TotalsRow(c, "Основа", Num(model.NetAmount), model.Currency, false, accent);
+                TotalsRow(c, "ДДВ", Num(model.VatAmount), model.Currency, false, accent);
                 c.Item().PaddingTop(6).Width(220).LineHorizontal(0.5f).LineColor("#1E293B");
                 c.Item().PaddingTop(6).Width(220).Row(r =>
                 {
-                    r.RelativeItem().Text("Total").FontSize(13);
-                    r.ConstantItem(110).AlignRight().Text($"{Num(model.GrossAmount)} {model.Currency}").FontSize(13).Bold();
+                    r.RelativeItem().Text("Вкупно").FontSize(13);
+                    r.ConstantItem(110).AlignRight().Text($"{Num(model.GrossAmount)} {model.Currency}")
+                        .FontSize(13).Bold().FontColor(accent.Dark);
                 });
             });
         });
@@ -439,9 +448,9 @@ public class InvoicePdfService : IInvoicePdfService
             c.Item().PaddingTop(3).Text(name);
             if (!string.IsNullOrWhiteSpace(address))
                 c.Item().Text(address).FontColor("#64748B");
-            c.Item().Text($"EDB {edb}").FontColor("#64748B");
+            c.Item().Text($"ЕДБ {edb}").FontColor("#64748B");
             if (!string.IsNullOrWhiteSpace(vat))
-                c.Item().Text($"VAT {vat}").FontColor("#64748B");
+                c.Item().Text($"ДДВ {vat}").FontColor("#64748B");
         });
     }
 
@@ -459,7 +468,7 @@ public class InvoicePdfService : IInvoicePdfService
     // ======================================================================
     // Shared helpers
     // ======================================================================
-    private static void TotalsRow(ColumnDescriptor c, string label, string value, string currency, bool bold)
+    private static void TotalsRow(ColumnDescriptor c, string label, string value, string currency, bool bold, PdfAccentColor accent)
     {
         c.Item().Width(240).Row(r =>
         {
@@ -469,7 +478,7 @@ public class InvoicePdfService : IInvoicePdfService
             if (bold)
             {
                 labelText.Bold();
-                valueText.Bold().FontColor("#1B3A6B");
+                valueText.Bold().FontColor(accent.Dark);
             }
             else
             {

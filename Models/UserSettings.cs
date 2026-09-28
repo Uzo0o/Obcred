@@ -18,6 +18,7 @@ public class UserSettings
     // (a local copy under our AppData folder, so it survives the original being moved/deleted).
     public string PdfTemplate { get; set; } = "Classic";
     public string PdfLogoPath { get; set; } = string.Empty;
+    public string PdfAccentColorId { get; set; } = "Blue";
     
     // Cached UJP Data
     public string SellerName { get; set; } = string.Empty;

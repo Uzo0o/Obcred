@@ -53,22 +53,22 @@ public partial class SettingsViewModel : ObservableObject
             store.Open(OpenFlags.ReadOnly);
 
             X509Certificate2Collection selectedCerts = X509Certificate2UI.SelectFromCollection(
-                store.Certificates, 
-                "Select your Certificate", 
-                "Please select your KIBS/Telekom USB Certificate from the list.", 
+                store.Certificates,
+                "Изберете го вашиот сертификат",
+                "Изберете го вашиот KIBS/Telekom USB сертификат од листата.",
                 X509SelectionFlag.SingleSelection);
 
             if (selectedCerts.Count > 0)
             {
                 CertThumbprint = selectedCerts[0].Thumbprint;
-                CertPath = string.Empty; 
+                CertPath = string.Empty;
                 CertPassword = string.Empty;
-                StatusMessage = "USB Certificate linked successfully!";
+                StatusMessage = "USB сертификатот е успешно поврзан!";
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"USB Error: {ex.Message}";
+            StatusMessage = $"USB грешка: {ex.Message}";
         }
 #pragma warning restore CA1416
     }
@@ -94,13 +94,13 @@ public partial class SettingsViewModel : ObservableObject
         
         if (!hasCert || string.IsNullOrWhiteSpace(SellerEdb))
         {
-            StatusMessage = "Please provide a certificate and your EDB.";
+            StatusMessage = "Внесете сертификат и вашиот ЕДБ.";
             return;
         }
 
         try
         {
-            StatusMessage = "Applying certificate to system...";
+            StatusMessage = "Се применува сертификатот на системот...";
 
             // Seed from the CURRENT settings (not a blank object) so fields this screen
             // doesn't own — like the PDF template/logo chosen on the PDF Template
@@ -115,11 +115,11 @@ public partial class SettingsViewModel : ObservableObject
             initialSettings.UseProductionEnvironment = UseProductionEnvironment;
             _settingsService.SaveSettings(initialSettings);
 
-            StatusMessage = "Verifying company with UJP...";
+            StatusMessage = "Се проверува компанијата со УЈП...";
 
             var company = await _ujpService.GetCompanyDetailsAsync(SellerEdb);
 
-            initialSettings.SellerName = company?.Name ?? "Unknown";
+            initialSettings.SellerName = company?.Name ?? "Непознато";
             initialSettings.SellerVatNumber = company?.VatNumber ?? ""; 
             initialSettings.SellerStreet = company?.Address?.Street ?? "";
             initialSettings.SellerNumber = company?.Address?.Number ?? "-"; 
@@ -134,13 +134,13 @@ public partial class SettingsViewModel : ObservableObject
             // block finishing setup.
             _ = _usageService.SyncEdbAsync(SellerEdb);
 
-            StatusMessage = "Setup Complete!";
-            
+            StatusMessage = "Поставувањето е завршено!";
+
             CloseAction?.Invoke();
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Verification Failed: {ex.Message}";
+            StatusMessage = $"Проверката не успеа: {ex.Message}";
             System.Diagnostics.Debug.WriteLine($"[SETUP ERROR]: {ex.Message}");
         }
     }

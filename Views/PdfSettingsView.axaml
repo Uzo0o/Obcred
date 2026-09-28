@@ -1,122 +1,149 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:viewModels="clr-namespace:Obcred.ViewModels"
+             xmlns:converters="using:Avalonia.Data.Converters"
              xmlns:local="using:Obcred.Converters"
              x:DataType="viewModels:PdfSettingsViewModel"
              x:Class="Obcred.Views.PdfSettingsView">
 
-    <Grid Classes="PageRoot" Margin="28,24,28,28" RowDefinitions="Auto,*">
-        <Grid.RenderTransform>
-            <TranslateTransform/>
-        </Grid.RenderTransform>
+    <Grid Classes="PageRoot" Margin="24,20,24,24" ColumnDefinitions="1*,1.3*" ColumnSpacing="16">
 
-        <TextBlock Grid.Row="0" Text="PDF Template" Classes="PageTitleStyle"/>
+        <!-- LEFT: template picker + logo + save -->
+        <StackPanel Grid.Column="0" Spacing="16">
 
-        <Grid Grid.Row="1" ColumnDefinitions="1*,1.3*">
+            <Border Classes="Card D1">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,14">
+                        <Border Classes="IconAvatar">
+                            <PathIcon Data="{StaticResource IconLayout}"/>
+                        </Border>
+                        <TextBlock Text="Изглед" Classes="CardHeaderStyle"/>
+                    </StackPanel>
 
-            <!-- LEFT: template picker + logo + save -->
-            <StackPanel Grid.Column="0" Margin="0,0,20,0">
-
-                <Border Classes="Card" Margin="0,0,0,20">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                            <Border Classes="CardHeaderAccent"/>
-                            <TextBlock Text="Choose a Layout" Classes="CardHeaderStyle" Margin="0"/>
+                    <RadioButton Classes="TemplateCard" GroupName="PdfTemplate"
+                                 Command="{Binding SelectTemplateCommand}" CommandParameter="Classic"
+                                 IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Classic}">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Класичен" FontWeight="SemiBold" FontSize="13.5" Foreground="{StaticResource BrandText}"/>
+                            <TextBlock Text="Оградени полиња за продавач/купувач и табела со линии. Традиционален и сигурен."
+                                       FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
                         </StackPanel>
+                    </RadioButton>
 
-                        <RadioButton Classes="TemplateCard" GroupName="PdfTemplate"
-                                     Command="{Binding SelectTemplateCommand}" CommandParameter="Classic"
-                                     IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Classic}">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Classic" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrandText}"/>
-                                <TextBlock Text="Bordered seller/buyer boxes, a clean ruled table. Traditional and safe."
-                                           FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton Classes="TemplateCard" GroupName="PdfTemplate"
-                                     Command="{Binding SelectTemplateCommand}" CommandParameter="Modern"
-                                     IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Modern}">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Modern" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrandText}"/>
-                                <TextBlock Text="Bold accent header band with your logo, shaded table rows, a stronger totals block."
-                                           FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton Classes="TemplateCard" GroupName="PdfTemplate"
-                                     Command="{Binding SelectTemplateCommand}" CommandParameter="Minimal"
-                                     IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Minimal}">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Minimal" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrandText}"/>
-                                <TextBlock Text="No borders or shading — just typography, whitespace, and thin dividers."
-                                           FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </RadioButton>
-                    </StackPanel>
-                </Border>
-
-                <Border Classes="Card" Margin="0,0,0,20">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                            <Border Classes="CardHeaderAccent"/>
-                            <TextBlock Text="Company Logo" Classes="CardHeaderStyle" Margin="0"/>
+                    <RadioButton Classes="TemplateCard" GroupName="PdfTemplate"
+                                 Command="{Binding SelectTemplateCommand}" CommandParameter="Modern"
+                                 IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Modern}">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Модерен" FontWeight="SemiBold" FontSize="13.5" Foreground="{StaticResource BrandText}"/>
+                            <TextBlock Text="Акцентирана лента во заглавието со вашето лого, засенчени редови во табелата, поизразен блок со вкупни износи."
+                                       FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
                         </StackPanel>
+                    </RadioButton>
 
-                        <Grid ColumnDefinitions="72,*">
-                            <Border Grid.Column="0" Width="64" Height="64" CornerRadius="10"
-                                    Background="{StaticResource InputBackground}" BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
-                                    ClipToBounds="True">
-                                <Panel>
-                                    <Image Source="{Binding LogoPreview}" Stretch="Uniform" Margin="6"
-                                           IsVisible="{Binding HasLogo}"/>
-                                    <PathIcon Data="{StaticResource IconLayout}" Width="20" Height="20" Foreground="#CBD5E1"
-                                              HorizontalAlignment="Center" VerticalAlignment="Center"
-                                              IsVisible="{Binding !HasLogo}"/>
-                                </Panel>
-                            </Border>
+                    <RadioButton Classes="TemplateCard" GroupName="PdfTemplate" Margin="0"
+                                 Command="{Binding SelectTemplateCommand}" CommandParameter="Minimal"
+                                 IsChecked="{Binding SelectedTemplateId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Minimal}">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Минималистички" FontWeight="SemiBold" FontSize="13.5" Foreground="{StaticResource BrandText}"/>
+                            <TextBlock Text="Без рамки или засенчување — типографија, празен простор и тенки разделители."
+                                       FontSize="12" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </RadioButton>
 
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0" Spacing="8">
-                                <TextBlock Text="PNG or JPEG. Shown top-left/top-right on the invoice depending on layout."
-                                           FontSize="11.5" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"/>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button Command="{Binding BrowseLogoCommand}" Classes="SecondaryActionBtn" Padding="14,0" Height="34">
-                                        <TextBlock Text="Upload Logo" FontSize="12.5" VerticalAlignment="Center"/>
-                                    </Button>
-                                    <Button Command="{Binding RemoveLogoCommand}" Classes="IconGhostBtn" IsVisible="{Binding HasLogo}"
-                                            ToolTip.Tip="Remove logo" Padding="8">
-                                        <PathIcon Data="{StaticResource Close}" Width="12" Height="12"/>
-                                    </Button>
-                                </StackPanel>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-                <Button Command="{Binding SaveCommand}" Classes="PrimaryActionBtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                    <TextBlock Text="Save Template"/>
-                </Button>
-                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandSuccess}" FontSize="12"
-                           TextWrapping="Wrap" Margin="0,10,0,0" HorizontalAlignment="Center"/>
-            </StackPanel>
-
-            <!-- RIGHT: live preview -->
-            <Border Grid.Column="1" Classes="Card" Padding="20">
-                <Grid RowDefinitions="Auto,*">
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,14">
-                        <Border Classes="CardHeaderAccent"/>
-                        <TextBlock Text="Live Preview" Classes="CardHeaderStyle" Margin="0"/>
-                    </StackPanel>
-
-                    <Border Grid.Row="1" Background="{StaticResource InputBackground}" CornerRadius="10" Padding="16">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto">
-                            <Border Background="White" BoxShadow="0 8 24 -6 #26000000" HorizontalAlignment="Center">
-                                <Image Source="{Binding PdfPreview}" Stretch="Uniform" MaxWidth="480"/>
-                            </Border>
-                        </ScrollViewer>
-                    </Border>
-                </Grid>
+                    <TextBlock Text="Боја" Classes="SectionLabel" Margin="0,16,0,10"/>
+                    <WrapPanel ItemSpacing="10" LineSpacing="10">
+                        <RadioButton Classes="ColorSwatch" GroupName="PdfAccentColor" Background="#2E86FF" ToolTip.Tip="Сина"
+                                     Command="{Binding SelectColorCommand}" CommandParameter="Blue"
+                                     IsChecked="{Binding SelectedAccentColorId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Blue}"/>
+                        <RadioButton Classes="ColorSwatch" GroupName="PdfAccentColor" Background="#E53E3E" ToolTip.Tip="Црвена"
+                                     Command="{Binding SelectColorCommand}" CommandParameter="Red"
+                                     IsChecked="{Binding SelectedAccentColorId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Red}"/>
+                        <RadioButton Classes="ColorSwatch" GroupName="PdfAccentColor" Background="#16A34A" ToolTip.Tip="Зелена"
+                                     Command="{Binding SelectColorCommand}" CommandParameter="Green"
+                                     IsChecked="{Binding SelectedAccentColorId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Green}"/>
+                        <RadioButton Classes="ColorSwatch" GroupName="PdfAccentColor" Background="#D97706" ToolTip.Tip="Жолта"
+                                     Command="{Binding SelectColorCommand}" CommandParameter="Amber"
+                                     IsChecked="{Binding SelectedAccentColorId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Amber}"/>
+                        <RadioButton Classes="ColorSwatch" GroupName="PdfAccentColor" Background="#7C3AED" ToolTip.Tip="Виолетова"
+                                     Command="{Binding SelectColorCommand}" CommandParameter="Purple"
+                                     IsChecked="{Binding SelectedAccentColorId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Purple}"/>
+                        <RadioButton Classes="ColorSwatch" GroupName="PdfAccentColor" Background="#0D9488" ToolTip.Tip="Тиркизна"
+                                     Command="{Binding SelectColorCommand}" CommandParameter="Teal"
+                                     IsChecked="{Binding SelectedAccentColorId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Teal}"/>
+                        <RadioButton Classes="ColorSwatch" GroupName="PdfAccentColor" Background="#DB2777" ToolTip.Tip="Розова"
+                                     Command="{Binding SelectColorCommand}" CommandParameter="Pink"
+                                     IsChecked="{Binding SelectedAccentColorId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Pink}"/>
+                        <RadioButton Classes="ColorSwatch" GroupName="PdfAccentColor" Background="#475569" ToolTip.Tip="Графитна"
+                                     Command="{Binding SelectColorCommand}" CommandParameter="Graphite"
+                                     IsChecked="{Binding SelectedAccentColorId, Converter={x:Static local:StringEqualsConverter.Instance}, ConverterParameter=Graphite}"/>
+                    </WrapPanel>
+                </StackPanel>
             </Border>
-        </Grid>
+
+            <Border Classes="Card D2">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,14">
+                        <Border Classes="IconAvatar">
+                            <PathIcon Data="{StaticResource Document}"/>
+                        </Border>
+                        <TextBlock Text="Лого на компанијата" Classes="CardHeaderStyle"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Border Grid.Column="0" Width="64" Height="64" CornerRadius="8"
+                                Background="{StaticResource SurfaceSubtle}" BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
+                                ClipToBounds="True">
+                            <Panel>
+                                <Image Source="{Binding LogoPreview}" Stretch="Uniform" Margin="6"
+                                       IsVisible="{Binding HasLogo}"/>
+                                <PathIcon Data="{StaticResource IconLayout}" Width="18" Height="18" Foreground="{StaticResource BorderStrong}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          IsVisible="{Binding !HasLogo}"/>
+                            </Panel>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="PNG или JPEG. Се поставува во заглавието на фактурата, позицијата зависи од изгледот."
+                                       Classes="Muted" TextWrapping="Wrap"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button Command="{Binding BrowseLogoCommand}" Classes="SecondaryActionBtn" Content="Прикачи лого"/>
+                                <Button Command="{Binding RemoveLogoCommand}" Classes="IconGhostBtn" IsVisible="{Binding HasLogo}"
+                                        ToolTip.Tip="Отстрани лого" Padding="8" VerticalAlignment="Center">
+                                    <PathIcon Data="{StaticResource Close}" Width="11" Height="11"/>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="8">
+                <Button Command="{Binding SaveCommand}" Classes="PrimaryActionBtn" HorizontalAlignment="Stretch" Content="Зачувај шаблон"/>
+                <TextBlock Text="{Binding StatusMessage}" Classes="StatusNote" TextAlignment="Center"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static converters:StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- RIGHT: live preview -->
+        <Border Grid.Column="1" Classes="Card D3" Padding="0">
+            <Grid RowDefinitions="Auto,*">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="20,16,20,14">
+                    <Border Classes="IconAvatar">
+                        <PathIcon Data="{StaticResource IconEye}"/>
+                    </Border>
+                    <TextBlock Text="Преглед" Classes="CardHeaderStyle"/>
+                </StackPanel>
+
+                <Border Grid.Row="1" Background="{StaticResource BrandBackground}" CornerRadius="0,0,10,10"
+                        BorderBrush="{StaticResource BorderLight}" BorderThickness="0,1,0,0" Padding="20">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                        <Border Background="White" BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
+                                BoxShadow="0 6 18 -8 #33000000" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <Image Source="{Binding PdfPreview}" Stretch="Uniform" MaxWidth="480"/>
+                        </Border>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

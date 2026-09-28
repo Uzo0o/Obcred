@@ -50,7 +50,7 @@ public partial class HistoryViewModel : ViewModelBase
 
         if (string.IsNullOrWhiteSpace(SelectedInvoice.PdfModelJson))
         {
-            StatusMessage = "No PDF data stored for this invoice.";
+            StatusMessage = "Нема зачувани PDF податоци за оваа фактура.";
             return;
         }
 
@@ -62,7 +62,7 @@ public partial class HistoryViewModel : ViewModelBase
             var model = JsonSerializer.Deserialize<InvoicePdfModel>(SelectedInvoice.PdfModelJson);
             if (model == null)
             {
-                StatusMessage = "Could not read stored PDF data.";
+                StatusMessage = "Не можеа да се прочитаат зачуваните PDF податоци.";
                 return;
             }
 
@@ -71,11 +71,11 @@ public partial class HistoryViewModel : ViewModelBase
                 return; // cancelled
 
             _pdfService.Save(model, path);
-            StatusMessage = $"PDF saved to {path}";
+            StatusMessage = $"PDF зачуван во {path}";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"PDF export failed: {ex.Message}";
+            StatusMessage = $"Извезувањето во PDF не успеа: {ex.Message}";
         }
     }
 }

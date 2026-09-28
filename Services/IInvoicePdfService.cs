@@ -6,17 +6,17 @@ namespace Obcred.Services;
 public interface IInvoicePdfService
 {
     /// <summary>Renders the invoice to PDF bytes, using the user's currently saved
-    /// template + logo preference.</summary>
+    /// template + logo + accent color preference.</summary>
     byte[] Generate(InvoicePdfModel model);
 
     /// <summary>Renders the invoice and writes it to the given file path, using the
-    /// user's currently saved template + logo preference.</summary>
+    /// user's currently saved template + logo + accent color preference.</summary>
     void Save(InvoicePdfModel model, string filePath);
 
-    /// <summary>Renders with an explicit template/logo, bypassing saved settings —
-    /// used by the PDF Template screen to preview a choice before it's saved.</summary>
-    byte[] Generate(InvoicePdfModel model, string templateId, string? logoPath);
+    /// <summary>Renders with an explicit template/logo/accent color, bypassing saved
+    /// settings — used by the PDF Template screen to preview a choice before it's saved.</summary>
+    byte[] Generate(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null);
 
     /// <summary>Renders just the first page as a PNG, for a live on-screen preview.</summary>
-    byte[] GeneratePreviewImage(InvoicePdfModel model, string templateId, string? logoPath);
+    byte[] GeneratePreviewImage(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null);
 }

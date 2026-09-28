@@ -1,4 +1,6 @@
+using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.Configuration;
@@ -32,9 +34,6 @@ public partial class App : Application
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddSingleton<SettingsWindow>();
-                    services.AddSingleton<SettingsViewModel>();
-
                     services.AddHttpClient<IUjpService, UjpService>();
                     services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
                     services.AddHttpClient<IUsageService, UsageService>();
@@ -54,11 +53,19 @@ public partial class App : Application
                     services.AddSingleton<ClientsViewModel>();
                     services.AddSingleton<PurchaseInvoicesViewModel>();
                     services.AddSingleton<PdfSettingsViewModel>();
+
+                    // SettingsWindow/SettingsViewModel are deliberately NOT registered
+                    // here: both are constructed fresh with `new` every time they're
+                    // needed (see ShowSettingsOrMainWindow and MainWindow's
+                    // OpenSettings_Click) so a stale account's cert/EDB never lingers
+                    // in a cached singleton after a logout -> different-account login.
                 })
                 .Build();
 
             await AppHost.StartAsync();
 
+            var sessionContext = AppHost.Services.GetRequiredService<ISessionContext>();
+            var databaseService = AppHost.Services.GetRequiredService<IDatabaseService>();
             var settingsService = AppHost.Services.GetRequiredService<IUserSettingsService>();
 
             // Don't close the app just because a window closed, until we've decided
@@ -66,15 +73,20 @@ public partial class App : Application
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
 
             // Extracted from your original logic unchanged — decides whether the
-            // user still needs the first-run Settings screen or can go straight
-            // to the invoicing UI. Now called *after* a successful login instead
-            // of being the very first thing shown.
-            void ShowSettingsOrMainWindow()
+            // signed-in account still needs the first-run Settings screen or can go
+            // straight to the invoicing UI. Now called *after* a successful login
+            // (and after that account's local data has been switched in) instead of
+            // being the very first thing shown.
+            async Task ShowSettingsOrMainWindow()
             {
                 if (settingsService.IsConfigured())
                 {
+                    var invoiceVm = AppHost.Services.GetRequiredService<InvoiceViewModel>();
+                    invoiceVm.LogoutRequested = DoLogout;
+                    await invoiceVm.RefreshForUserAsync();
+
                     var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-                    mainWindow.DataContext = AppHost.Services.GetRequiredService<InvoiceViewModel>();
+                    mainWindow.DataContext = invoiceVm;
                     desktop.MainWindow = mainWindow;
                     mainWindow.Show();
 
@@ -82,22 +94,29 @@ public partial class App : Application
                 }
                 else
                 {
-                    var settingsWindow = AppHost.Services.GetRequiredService<SettingsWindow>();
-
-                    var settingsVm = AppHost.Services.GetRequiredService<SettingsViewModel>();
-                    settingsWindow.DataContext = settingsVm;
+                    // Fresh instances every time — never a cached singleton — so a
+                    // different account never sees the previous one's cert/EDB here.
+                    var settingsVm = new SettingsViewModel(
+                        settingsService,
+                        AppHost.Services.GetRequiredService<IUjpService>(),
+                        AppHost.Services.GetRequiredService<IUsageService>());
+                    var settingsWindow = new SettingsWindow { DataContext = settingsVm };
                     settingsVm.CloseAction = () => settingsWindow.Close();
                     settingsVm.BrowseFileAction = () => SettingsWindow.BrowsePfxAsync(settingsWindow);
 
                     desktop.MainWindow = settingsWindow;
                     settingsWindow.Show();
 
-                    settingsWindow.Closed += (s, args) =>
+                    settingsWindow.Closed += async (s, args) =>
                     {
                         if (settingsService.IsConfigured())
                         {
+                            var invoiceVm = AppHost.Services.GetRequiredService<InvoiceViewModel>();
+                            invoiceVm.LogoutRequested = DoLogout;
+                            await invoiceVm.RefreshForUserAsync();
+
                             var mainWindow = AppHost.Services.GetRequiredService<MainWindow>();
-                            mainWindow.DataContext = AppHost.Services.GetRequiredService<InvoiceViewModel>();
+                            mainWindow.DataContext = invoiceVm;
 
                             desktop.MainWindow = mainWindow;
                             mainWindow.Show();
@@ -115,20 +134,57 @@ public partial class App : Application
             // NEW: gate everything behind Google sign-in.
             var loginWindow = AppHost.Services.GetRequiredService<LoginWindow>();
             var loginVm = AppHost.Services.GetRequiredService<LoginViewModel>();
-            var sessionContext = AppHost.Services.GetRequiredService<ISessionContext>();
             loginWindow.DataContext = loginVm;
 
             bool loginWindowShown = false;
 
+            // Signs the current account out (locally — the cached session file is
+            // deleted, and the in-memory session/database/settings are dropped) and
+            // returns to the login screen so a different account can sign in and get
+            // its own invoices/clients/plan. Reachable from the sidebar's "Одјава"
+            // button via InvoiceViewModel.LogoutRequested.
+            void DoLogout()
+            {
+                var googleAuth = AppHost.Services.GetRequiredService<IGoogleAuthService>();
+                googleAuth.Logout();
+                sessionContext.Clear();
+
+                // Hide rather than Close: both MainWindow and LoginWindow are
+                // long-lived singletons meant to be shown again, and closing the
+                // window Avalonia currently treats as "the" MainWindow under
+                // OnMainWindowClose would shut the whole app down.
+                desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+                desktop.MainWindow?.Hide();
+
+                loginVm.Reset();
+                loginWindowShown = true;
+                desktop.MainWindow = loginWindow;
+                loginWindow.Show();
+            }
+
             // Fires for BOTH paths below — a silently restored cached session,
             // and a fresh interactive login — so the session only needs to be
-            // captured in one place.
-            loginVm.LoginSucceeded = session =>
+            // captured in one place. Also fires again after a logout, once the
+            // next account (or the same one) signs back in.
+            loginVm.LoginSucceeded = async session =>
             {
                 sessionContext.SetCurrent(session);
+
+                // Falls back to Email in the unlikely case the Worker ever omits Id —
+                // either way, this is the key that keeps one account's local data
+                // (invoices, clients, cert/EDB) from leaking into another's.
+                string userKey = !string.IsNullOrWhiteSpace(session.Id) ? session.Id : session.Email;
+
+                // Point local storage at THIS account's own data before anything
+                // reads from it — first login ever inherits the old single-account
+                // data as a starting point; every account after that starts empty.
+                await databaseService.SwitchUserAsync(userKey);
+                settingsService.SwitchUser(userKey);
+
                 if (loginWindowShown)
-                    loginWindow.Close();
-                ShowSettingsOrMainWindow();
+                    loginWindow.Hide();
+
+                await ShowSettingsOrMainWindow();
             };
 
             // If a valid session is already cached (DPAPI-encrypted on disk),

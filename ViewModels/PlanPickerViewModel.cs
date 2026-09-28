@@ -47,13 +47,13 @@ public partial class PlanPickerViewModel : ViewModelBase
         if (plans is null)
         {
             HasError = true;
-            StatusMessage = "Couldn't reach the server to load plans. Check your connection and try again.";
+            StatusMessage = "Не можеше да се поврземе со серверот за да ги вчита плановите. Проверете ја вашата врска и обидете се повторно.";
             IsBusy = false;
             return;
         }
 
         _currentPlanRank = plans.FirstOrDefault(p => p.Id == status?.Plan)?.Rank ?? 0;
-        CurrentPlanLabel = status is null ? "Free plan" : $"Currently on: {status.Plan[0].ToString().ToUpper()}{status.Plan[1..]}";
+        CurrentPlanLabel = status is null ? "Бесплатен план" : $"Моментално на: {status.Plan[0].ToString().ToUpper()}{status.Plan[1..]}";
 
         Plans.Clear();
         foreach (var plan in plans.OrderBy(p => p.Rank))
@@ -95,7 +95,7 @@ public partial class PlanPickerViewModel : ViewModelBase
         if (!result.Success)
         {
             HasError = true;
-            StatusMessage = result.ErrorMessage ?? "Something went wrong — please try again.";
+            StatusMessage = result.ErrorMessage ?? "Нешто тргна наопаку — обидете се повторно.";
             IsBusy = false;
             // Refresh so the UI reflects reality (e.g. a downgrade race with another device).
             await LoadAsync();

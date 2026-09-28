@@ -6,6 +6,11 @@ namespace Obcred.Services;
 
 public interface IDatabaseService
 {
+    // Points this service at the signed-in account's own SQLite file (creating
+    // it if this is their first time). Must be called once a user is known —
+    // and again after every account switch — before any method below is used.
+    Task SwitchUserAsync(string userId);
+
     Task SaveClientAsync(ClientRecord client);
     Task<List<ClientRecord>> SearchClientsByNameAsync(string searchQuery);
     Task<ClientRecord> GetClientByEdbAsync(string edb);

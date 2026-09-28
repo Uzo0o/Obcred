@@ -44,7 +44,7 @@ public class UjpService : IUjpService
         
         if (result == null || string.IsNullOrWhiteSpace(result.Timestamp))
         {
-            throw new Exception("Failed to parse the server timestamp from UJP.");
+            throw new Exception("Не можеше да се прочита временската ознака од серверот на УЈП.");
         }
 
         return result.Timestamp;
@@ -83,13 +83,13 @@ public class UjpService : IUjpService
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"UJP Lookup Error {(int)response.StatusCode}: {content}");
+            throw new Exception($"Грешка при пребарување во УЈП {(int)response.StatusCode}: {content}");
         }
 
-        var wrapper = JsonSerializer.Deserialize<CompanyResponse>(content, 
+        var wrapper = JsonSerializer.Deserialize<CompanyResponse>(content,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            
-        return wrapper?.Company ?? throw new Exception("Failed to deserialize company data.");
+
+        return wrapper?.Company ?? throw new Exception("Не можеа да се обработат податоците за компанијата.");
     }
 
     public async Task<UjpSubmissionResult> SubmitInvoiceAsync(object invoice)
@@ -188,7 +188,7 @@ public class UjpService : IUjpService
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"UJP purchase-invoice lookup failed ({(int)response.StatusCode}): {responseText}");
+            throw new Exception($"Пребарувањето на влезни фактури од УЈП не успеа ({(int)response.StatusCode}): {responseText}");
         }
 
         var wrapperResponse = JsonSerializer.Deserialize<PurchaseInvoiceStatusResponse>(
@@ -282,7 +282,7 @@ public class UjpService : IUjpService
             var certs = store.Certificates.Find(X509FindType.FindByThumbprint, settings.CertThumbprint, false);
             if (certs.Count > 0) return new X509Certificate2(certs[0]);
             
-            throw new Exception("USB Hardware Token missing from the local system store.");
+            throw new Exception("USB хардверскиот токен не е пронајден во локалното складиште на системот.");
         }
 
         if (!string.IsNullOrWhiteSpace(settings.CertPath))
@@ -292,7 +292,7 @@ public class UjpService : IUjpService
             return X509CertificateLoader.LoadPkcs12FromFile(settings.CertPath, settings.CertPassword);
         }
 
-        throw new Exception("No active digital certificate identity configured.");
+        throw new Exception("Не е конфигуриран активен дигитален сертификат.");
     }
 
     private string SignPayload(string jsonContent, X509Certificate2 cert)
@@ -301,7 +301,7 @@ public class UjpService : IUjpService
         using RSA privateKey = cert.GetRSAPrivateKey();
 
         if (privateKey == null)
-            throw new Exception("The configured certificate does not contain an accessible RSA private key.");
+            throw new Exception("Конфигурираниот сертификат не содржи достапен приватен RSA клуч.");
 
         return JWT.Encode(jsonContent, privateKey, JwsAlgorithm.RS256, extraHeaders: headers);
     }

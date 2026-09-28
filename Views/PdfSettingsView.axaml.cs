@@ -28,11 +28,11 @@ public partial class PdfSettingsView : UserControl
 
         var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Select a company logo",
+            Title = "Изберете лого на компанијата",
             AllowMultiple = false,
             FileTypeFilter = new[]
             {
-                new FilePickerFileType("Image files") { Patterns = new[] { "*.png", "*.jpg", "*.jpeg" } }
+                new FilePickerFileType("Слики") { Patterns = new[] { "*.png", "*.jpg", "*.jpeg" } }
             }
         });
 

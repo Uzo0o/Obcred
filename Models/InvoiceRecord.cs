@@ -30,8 +30,8 @@ public class InvoiceRecord
     public decimal GrossAmount { get; set; }
     public string Currency { get; set; } = "MKD";
 
-    /// <summary>Draft, Sent, or Failed.</summary>
-    public string Status { get; set; } = "Draft";
+    /// <summary>Нацрт, Испратено, or Неуспешно.</summary>
+    public string Status { get; set; } = "Нацрт";
     public int HttpStatusCode { get; set; }
 
     public string PayloadJson { get; set; } = string.Empty;  // exact JSON document we built

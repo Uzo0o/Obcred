@@ -13,20 +13,20 @@ public class PdfTemplateOption
         new()
         {
             Id = "Classic",
-            DisplayName = "Classic",
-            Description = "Bordered seller/buyer boxes, a clean ruled table. Traditional and safe."
+            DisplayName = "Класичен",
+            Description = "Оградени полиња за продавач/купувач, чиста табела со линии. Традиционален и сигурен."
         },
         new()
         {
             Id = "Modern",
-            DisplayName = "Modern",
-            Description = "Bold accent header band with your logo, shaded table rows, a stronger totals block."
+            DisplayName = "Модерен",
+            Description = "Акцентирана лента во заглавието со вашето лого, засенчени редови во табелата, поизразен блок со вкупни износи."
         },
         new()
         {
             Id = "Minimal",
-            DisplayName = "Minimal",
-            Description = "No borders or shading — just typography, whitespace, and thin dividers."
+            DisplayName = "Минималистички",
+            Description = "Без рамки или засенчување — само типографија, празен простор и тенки разделители."
         }
     };
 }

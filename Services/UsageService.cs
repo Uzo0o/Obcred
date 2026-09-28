@@ -97,7 +97,7 @@ public class UsageService : IUsageService
     {
         string? token = _sessionContext.Current?.SessionToken;
         if (string.IsNullOrEmpty(token))
-            return new PlanSelectResult { Success = false, ErrorMessage = "You're not logged in." };
+            return new PlanSelectResult { Success = false, ErrorMessage = "Не сте најавени." };
 
         try
         {
@@ -116,12 +116,12 @@ public class UsageService : IUsageService
                     Success = false,
                     DowngradeRejected = true,
                     Plan = err?.CurrentPlan,
-                    ErrorMessage = err?.Message ?? "You can't move to a lower plan until next month."
+                    ErrorMessage = err?.Message ?? "Не можете да преминете на понизок план до следниот месец."
                 };
             }
 
             if (!response.IsSuccessStatusCode)
-                return new PlanSelectResult { Success = false, ErrorMessage = $"Server error ({(int)response.StatusCode})." };
+                return new PlanSelectResult { Success = false, ErrorMessage = $"Грешка на серверот ({(int)response.StatusCode})." };
 
             var ok = JsonSerializer.Deserialize<PlanSelectOkBody>(body);
             return new PlanSelectResult

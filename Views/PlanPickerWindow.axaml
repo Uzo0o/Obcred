@@ -4,55 +4,55 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         x:Class="Obcred.Views.PlanPickerWindow"
-        Title="Choose a plan — Obcred"
+        Title="Изберете план — Obcred"
+        Icon="/logo64.ico"
         Width="460"
         SizeToContent="Height"
         MaxHeight="720"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource BrandBackground}"
+        Background="{StaticResource SurfaceWhite}"
         xmlns:vm="using:Obcred.ViewModels"
         xmlns:conv="using:Avalonia.Data.Converters"
         xmlns:local="using:Obcred.Converters"
         x:DataType="vm:PlanPickerViewModel">
 
     <ScrollViewer>
-    <StackPanel Margin="28" Spacing="4">
+    <StackPanel Margin="24" Spacing="0">
 
-        <TextBlock Text="Choose a plan" FontSize="18" FontWeight="Bold"
+        <TextBlock Text="Изберете план" FontSize="19" FontWeight="SemiBold" LetterSpacing="-0.2"
                    Foreground="{StaticResource BrandText}"/>
-        <TextBlock Text="{Binding CurrentPlanLabel}" FontSize="12.5"
-                   Foreground="{StaticResource TextMuted}" Margin="0,2,0,4"/>
-        <TextBlock Text="You can move up to a higher plan any time. Once you switch, you can't move back down until next month."
-                   FontSize="11.5" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+        <TextBlock Text="{Binding CurrentPlanLabel}" Classes="Muted" FontSize="13" Margin="0,4,0,2"/>
+        <TextBlock Text="Можете да преминете на повисок план во секое време. По промена, не можете да се вратите на понизок план до следниот месец."
+                   Classes="Muted" TextWrapping="Wrap" Margin="0,0,0,18"/>
 
         <!-- Error banner -->
-        <Border Classes="BannerDanger" IsVisible="{Binding HasError}" Margin="0,0,0,12">
+        <Border Classes="BannerDanger" IsVisible="{Binding HasError}" Margin="0,0,0,12" Padding="12,8">
             <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandDanger}"
-                       FontSize="12.5" TextWrapping="Wrap"/>
+                       FontSize="12.5" FontWeight="Normal" LetterSpacing="0" TextWrapping="Wrap"/>
         </Border>
 
         <!-- Plan list — hidden while a confirmation is pending -->
         <ItemsControl ItemsSource="{Binding Plans}" IsVisible="{Binding PendingPlan, Converter={x:Static conv:ObjectConverters.IsNull}}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="{StaticResource InputBackground}" CornerRadius="10"
-                            Padding="14,12" Margin="0,0,0,8" BorderThickness="1.5"
+                    <Border Background="{StaticResource SurfaceWhite}" CornerRadius="8"
+                            Padding="14,12" Margin="0,0,0,8" BorderThickness="1"
                             BorderBrush="{Binding IsCurrent, Converter={x:Static local:BoolToBrandAccentConverter.Instance}}">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Grid.Column="0" Spacing="2">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"
                                                FontSize="14" Foreground="{StaticResource BrandText}"/>
-                                    <Border Background="{StaticResource BrandAccent}" CornerRadius="4"
-                                            Padding="6,1" IsVisible="{Binding IsCurrent}">
-                                        <TextBlock Text="Current" FontSize="10" Foreground="White"/>
+                                    <Border Background="{StaticResource AccentLight}" CornerRadius="4"
+                                            Padding="6,1" IsVisible="{Binding IsCurrent}" VerticalAlignment="Center">
+                                        <TextBlock Text="Тековен" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource BrandAccent}"/>
                                     </Border>
                                 </StackPanel>
-                                <TextBlock Text="{Binding LimitLabel}" FontSize="12" Foreground="{StaticResource TextMuted}"/>
-                                <TextBlock Text="{Binding PriceLabel}" FontSize="12" Foreground="{StaticResource TextMuted}"/>
+                                <TextBlock Text="{Binding LimitLabel}" FontSize="12.5" Foreground="{StaticResource TextMuted}"/>
+                                <TextBlock Text="{Binding PriceLabel}" FontSize="12.5" Foreground="{StaticResource BrandText}" FontWeight="Medium"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Choose" Classes="SecondaryActionBtn"
+                            <Button Grid.Column="1" Content="Избери" Classes="SecondaryActionBtn"
                                     VerticalAlignment="Center"
                                     IsVisible="{Binding !IsCurrent}" IsEnabled="{Binding !IsDowngrade}"
                                     Command="{Binding $parent[ItemsControl].((vm:PlanPickerViewModel)DataContext).SelectPlanCommand}"
@@ -65,33 +65,33 @@
 
         <!-- Confirmation panel — the required "are you sure" step for a plan switch -->
         <StackPanel IsVisible="{Binding PendingPlan, Converter={x:Static conv:ObjectConverters.IsNotNull}}" Spacing="12">
-            <Border Background="{StaticResource InputBackground}" CornerRadius="10" Padding="16">
-                <StackPanel Spacing="10">
+            <Border Background="{StaticResource SurfaceSubtle}" BorderBrush="{StaticResource BorderLight}" BorderThickness="1" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="8">
                     <TextBlock FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource BrandText}">
-                        <Run Text="Switch to"/> <Run Text="{Binding PendingPlan.DisplayName}"/><Run Text="?"/>
+                        <Run Text="Премини на"/> <Run Text="{Binding PendingPlan.DisplayName}"/><Run Text="?"/>
                     </TextBlock>
                     <TextBlock FontSize="12.5" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap">
-                        <Run Text="{Binding PendingPlan.PriceLabel}"/><Run Text=" — "/><Run Text="{Binding PendingPlan.LimitLabel}"/><Run Text=" included."/>
+                        <Run Text="{Binding PendingPlan.PriceLabel}"/><Run Text=" — "/><Run Text="{Binding PendingPlan.LimitLabel}"/><Run Text=" вклучени."/>
                     </TextBlock>
                     <TextBlock FontSize="12.5" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap"
-                               Text="Extra invoices beyond that are 14 MKD each, billed at the end of the month."/>
-                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource BrandDanger}" TextWrapping="Wrap"
-                               Text="This applies for the rest of this month, and you won't be able to move to a lower plan again until next month."/>
+                               Text="Дополнителните фактури над тоа чинат по 14 МКД, се наплаќаат на крајот на месецот."/>
+                    <TextBlock FontSize="12.5" FontWeight="Medium" Foreground="{StaticResource BrandDanger}" TextWrapping="Wrap"
+                               Text="Ова важи до крајот на овој месец, а нема да можете повторно да преминете на понизок план до следниот месец."/>
                 </StackPanel>
             </Border>
 
-            <Grid ColumnDefinitions="*,*">
-                <Button Grid.Column="0" Content="Cancel" Classes="SecondaryActionBtn"
-                        HorizontalAlignment="Stretch" Margin="0,0,6,0"
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Button Grid.Column="0" Content="Откажи" Classes="SecondaryActionBtn"
+                        HorizontalAlignment="Stretch"
                         Command="{Binding CancelPendingCommand}"/>
-                <Button Grid.Column="1" Content="Confirm switch" Classes="PrimaryActionBtn"
-                        HorizontalAlignment="Stretch" Margin="6,0,0,0"
+                <Button Grid.Column="1" Content="Потврди промена" Classes="PrimaryActionBtn"
+                        HorizontalAlignment="Stretch"
                         Command="{Binding ConfirmPendingCommand}"/>
             </Grid>
         </StackPanel>
 
-        <TextBlock Text="Loading..." IsVisible="{Binding IsBusy}" Foreground="{StaticResource TextMuted}"
-                   FontSize="12" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+        <TextBlock Text="Се вчитува…" IsVisible="{Binding IsBusy}" Classes="Muted"
+                   HorizontalAlignment="Center" Margin="0,12,0,0"/>
 
     </StackPanel>
     </ScrollViewer>

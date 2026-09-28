@@ -28,12 +28,12 @@ public partial class InvoiceEntryView : UserControl
 
         var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Save invoice PDF",
+            Title = "Зачувај PDF фактура",
             SuggestedFileName = defaultFileName,
             DefaultExtension = "pdf",
             FileTypeChoices = new[]
             {
-                new FilePickerFileType("PDF document") { Patterns = new[] { "*.pdf" } }
+                new FilePickerFileType("PDF документ") { Patterns = new[] { "*.pdf" } }
             }
         });
 

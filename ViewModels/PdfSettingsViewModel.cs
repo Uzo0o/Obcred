@@ -21,11 +21,13 @@ public partial class PdfSettingsViewModel : ViewModelBase
     private readonly IInvoicePdfService _pdfService;
 
     public IReadOnlyList<PdfTemplateOption> Templates => PdfTemplateOption.All;
+    public IReadOnlyList<PdfAccentColor> AccentColors => PdfAccentColor.All;
 
     // Wired by the view: opens a file picker restricted to images, returns the chosen path (or null).
     public Func<Task<string?>>? BrowseLogoFileAction { get; set; }
 
     [ObservableProperty] private string _selectedTemplateId = "Classic";
+    [ObservableProperty] private string _selectedAccentColorId = "Blue";
     [ObservableProperty] private string _logoPath = string.Empty;
     [ObservableProperty] private Bitmap? _logoPreview;
     [ObservableProperty] private Bitmap? _pdfPreview;
@@ -44,12 +46,14 @@ public partial class PdfSettingsViewModel : ViewModelBase
 
         var current = _settingsService.CurrentSettings;
         _selectedTemplateId = string.IsNullOrWhiteSpace(current.PdfTemplate) ? "Classic" : current.PdfTemplate;
+        _selectedAccentColorId = string.IsNullOrWhiteSpace(current.PdfAccentColorId) ? "Blue" : current.PdfAccentColorId;
         _logoPath = current.PdfLogoPath ?? string.Empty;
 
         RefreshPreview();
     }
 
     partial void OnSelectedTemplateIdChanged(string value) => RefreshPreview();
+    partial void OnSelectedAccentColorIdChanged(string value) => RefreshPreview();
 
     partial void OnLogoPathChanged(string value)
     {
@@ -59,6 +63,9 @@ public partial class PdfSettingsViewModel : ViewModelBase
 
     [RelayCommand]
     private void SelectTemplate(string templateId) => SelectedTemplateId = templateId;
+
+    [RelayCommand]
+    private void SelectColor(string colorId) => SelectedAccentColorId = colorId;
 
     [RelayCommand]
     private async Task BrowseLogoAsync()
@@ -81,11 +88,11 @@ public partial class PdfSettingsViewModel : ViewModelBase
 
             File.Copy(picked, destination, overwrite: true);
             LogoPath = destination;
-            StatusMessage = "Logo updated — don't forget to Save.";
+            StatusMessage = "Логото е ажурирано — не заборавајте да зачувате.";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Couldn't use that file: {ex.Message}";
+            StatusMessage = $"Не можеше да се употреби таа датотека: {ex.Message}";
         }
     }
 
@@ -93,7 +100,7 @@ public partial class PdfSettingsViewModel : ViewModelBase
     private void RemoveLogo()
     {
         LogoPath = string.Empty;
-        StatusMessage = "Logo removed — don't forget to Save.";
+        StatusMessage = "Логото е отстрането — не заборавајте да зачувате.";
     }
 
     [RelayCommand]
@@ -102,8 +109,9 @@ public partial class PdfSettingsViewModel : ViewModelBase
         var settings = _settingsService.CurrentSettings;
         settings.PdfTemplate = SelectedTemplateId;
         settings.PdfLogoPath = LogoPath;
+        settings.PdfAccentColorId = SelectedAccentColorId;
         _settingsService.SaveSettings(settings);
-        StatusMessage = "Saved — new PDFs will use this template.";
+        StatusMessage = "Зачувано — новите PDF-и ќе го користат овој шаблон.";
     }
 
     private void RefreshPreview()
@@ -112,14 +120,14 @@ public partial class PdfSettingsViewModel : ViewModelBase
         {
             var sampleModel = BuildSampleModel();
             byte[] pngBytes = _pdfService.GeneratePreviewImage(
-                sampleModel, SelectedTemplateId, string.IsNullOrWhiteSpace(LogoPath) ? null : LogoPath);
+                sampleModel, SelectedTemplateId, string.IsNullOrWhiteSpace(LogoPath) ? null : LogoPath, SelectedAccentColorId);
 
             using var ms = new MemoryStream(pngBytes);
             PdfPreview = new Bitmap(ms);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Preview failed: {ex.Message}";
+            StatusMessage = $"Прегледот не успеа: {ex.Message}";
             PdfPreview = null;
         }
 
@@ -144,10 +152,10 @@ public partial class PdfSettingsViewModel : ViewModelBase
     private InvoicePdfModel BuildSampleModel()
     {
         var settings = _settingsService.CurrentSettings;
-        string sellerName = string.IsNullOrWhiteSpace(settings.SellerName) ? "Your Company DOOEL" : settings.SellerName;
+        string sellerName = string.IsNullOrWhiteSpace(settings.SellerName) ? "Вашата компанија ДООЕЛ" : settings.SellerName;
         string sellerEdb = string.IsNullOrWhiteSpace(settings.SellerEdb) ? "4030000000000" : settings.SellerEdb;
         string sellerAddress = string.IsNullOrWhiteSpace(settings.SellerStreet)
-            ? "Sample Street 1, Skopje"
+            ? "Примерна улица 1, Скопје"
             : $"{settings.SellerStreet} {settings.SellerNumber}, {settings.SellerCity}";
 
         return new InvoicePdfModel
@@ -160,14 +168,14 @@ public partial class PdfSettingsViewModel : ViewModelBase
             SellerEdb = sellerEdb,
             SellerVatNumber = settings.SellerVatNumber,
             SellerAddress = sellerAddress,
-            BuyerName = "Sample Buyer DOOEL",
+            BuyerName = "Примерок купувач ДООЕЛ",
             BuyerEdb = "4030111111111",
             BuyerVatNumber = "МК4030111111111",
-            BuyerAddress = "Buyer Street 5, Bitola",
+            BuyerAddress = "Купувачка улица 5, Битола",
             Lines = new List<InvoicePdfLine>
             {
-                new() { LineNo = 1, Description = "Consulting services", Qty = 2, Unit = "h", UnitPrice = 1500m, VatLabel = "18%", LineNet = 3000m, LineVat = 540m, LineGross = 3540m },
-                new() { LineNo = 2, Description = "Software license", Qty = 1, Unit = "pcs", UnitPrice = 4200m, VatLabel = "18%", LineNet = 4200m, LineVat = 756m, LineGross = 4956m }
+                new() { LineNo = 1, Description = "Консултантски услуги", Qty = 2, Unit = "ч.", UnitPrice = 1500m, VatLabel = "18%", LineNet = 3000m, LineVat = 540m, LineGross = 3540m },
+                new() { LineNo = 2, Description = "Софтверска лиценца", Qty = 1, Unit = "ком.", UnitPrice = 4200m, VatLabel = "18%", LineNet = 4200m, LineVat = 756m, LineGross = 4956m }
             },
             NetAmount = 7200m,
             VatAmount = 1296m,

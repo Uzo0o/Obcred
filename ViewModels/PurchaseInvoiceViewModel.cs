@@ -66,12 +66,12 @@ public partial class PurchaseInvoicesViewModel : ViewModelBase
     {
         if (DateTo < DateFrom)
         {
-            StatusMessage = "The 'To' date can't be before the 'From' date.";
+            StatusMessage = "Датумот „До“ не може да биде пред датумот „Од“.";
             return;
         }
 
         IsBusy = true;
-        StatusMessage = "Contacting UJP...";
+        StatusMessage = "Се контактира УЈП...";
         try
         {
             var results = await _ujpService.GetPurchaseInvoicesStatusAsync(DateFrom.Date, DateTo.Date);
@@ -111,11 +111,11 @@ public partial class PurchaseInvoicesViewModel : ViewModelBase
             }
 
             await LoadFromCacheAsync();
-            StatusMessage = $"Synced {results.Count} invoice(s) from UJP.";
+            StatusMessage = $"Синхронизирани се {results.Count} фактура(и) од УЈП.";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Sync failed: {ex.Message}";
+            StatusMessage = $"Синхронизацијата не успеа: {ex.Message}";
         }
         finally
         {

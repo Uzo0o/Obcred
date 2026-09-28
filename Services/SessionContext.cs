@@ -7,4 +7,5 @@ public class SessionContext : ISessionContext
     public GoogleAuthResult? Current { get; private set; }
 
     public void SetCurrent(GoogleAuthResult session) => Current = session;
+    public void Clear() => Current = null;
 }

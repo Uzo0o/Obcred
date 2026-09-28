@@ -101,7 +101,7 @@ public class GoogleAuthService : IGoogleAuthService
     public async Task<GoogleAuthResult> LoginWithGoogleAsync(CancellationToken cancellationToken = default)
     {
         if (IsLoggingIn)
-            throw new InvalidOperationException("A sign-in is already in progress.");
+            throw new InvalidOperationException("Веќе е во тек една најава.");
 
         IsLoggingIn = true;
         var state = Guid.NewGuid().ToString("N");
@@ -118,8 +118,8 @@ public class GoogleAuthService : IGoogleAuthService
             catch (HttpListenerException ex)
             {
                 throw new InvalidOperationException(
-                    "Could not start the local sign-in listener on port 5050. " +
-                    "Close any other sign-in attempt and try again.", ex);
+                    "Не можеше да се стартува локалниот слушател за најава на порт 5050. " +
+                    "Затворете го секој друг обид за најава и обидете се повторно.", ex);
             }
 
             Process.Start(new ProcessStartInfo
@@ -142,8 +142,8 @@ public class GoogleAuthService : IGoogleAuthService
             if (!ok)
             {
                 throw new InvalidOperationException(error is not null
-                    ? $"Google sign-in failed: {error}"
-                    : "The sign-in response could not be verified. Please try again.");
+                    ? $"Google најавата не успеа: {error}"
+                    : "Одговорот за најавата не можеше да се потврди. Обидете се повторно.");
             }
 
             // Exchange the one-time code for the real user record over HTTPS.
@@ -155,7 +155,7 @@ public class GoogleAuthService : IGoogleAuthService
 
             var result = await response.Content.ReadFromJsonAsync<GoogleAuthResult>(cancellationToken: cancellationToken);
             if (result is null || string.IsNullOrEmpty(result.SessionToken))
-                throw new InvalidOperationException("The server did not return a valid session.");
+                throw new InvalidOperationException("Серверот не врати валидна сесија.");
 
             await SaveSessionAsync(result);
             return result;
@@ -183,7 +183,7 @@ public class GoogleAuthService : IGoogleAuthService
             {
                 if (cancellationToken.IsCancellationRequested)
                     throw new OperationCanceledException(cancellationToken);
-                throw new TimeoutException("Sign-in timed out. Please try again.");
+                throw new TimeoutException("Времето за најава истече. Обидете се повторно.");
             }
         }
 
@@ -194,9 +194,9 @@ public class GoogleAuthService : IGoogleAuthService
     {
         string html = success
             ? "<html><body style=\"font-family:sans-serif;text-align:center;padding-top:80px;\">" +
-              "<h2>Login successful!</h2><p>You can close this tab and return to Obcred.</p></body></html>"
+              "<h2>Најавата е успешна!</h2><p>Можете да го затворите ова јазиче и да се вратите во Obcred.</p></body></html>"
             : "<html><body style=\"font-family:sans-serif;text-align:center;padding-top:80px;\">" +
-              "<h2>Login could not be verified.</h2><p>Please close this tab and try again in Obcred.</p></body></html>";
+              "<h2>Најавата не можеше да се потврди.</h2><p>Затворете го ова јазиче и обидете се повторно во Obcred.</p></body></html>";
 
         byte[] bytes = Encoding.UTF8.GetBytes(html);
         context.Response.ContentType = "text/html; charset=utf-8";

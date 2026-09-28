@@ -16,8 +16,10 @@ public partial class LoginViewModel : ViewModelBase
     /// <summary>
     /// Set by App.axaml.cs. Invoked once sign-in succeeds (either via the button,
     /// or silently via TryAutoLoginAsync) so the app can move on to the next window.
+    /// Async because it has to switch the signed-in account's local database/settings
+    /// over before the next window is shown.
     /// </summary>
-    public Action<GoogleAuthResult>? LoginSucceeded { get; set; }
+    public Func<GoogleAuthResult, Task>? LoginSucceeded { get; set; }
 
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _statusMessage = string.Empty;
@@ -38,7 +40,8 @@ public partial class LoginViewModel : ViewModelBase
         if (cached is null)
             return false;
 
-        LoginSucceeded?.Invoke(cached);
+        if (LoginSucceeded is not null)
+            await LoginSucceeded(cached);
         return true;
     }
 
@@ -50,28 +53,29 @@ public partial class LoginViewModel : ViewModelBase
 
         IsBusy = true;
         HasError = false;
-        StatusMessage = "Opening your browser...";
+        StatusMessage = "Се отвора прелистувачот...";
         _loginCts = new CancellationTokenSource();
 
         try
         {
             var result = await _authService.LoginWithGoogleAsync(_loginCts.Token);
-            StatusMessage = $"Welcome, {result.Name}!";
-            LoginSucceeded?.Invoke(result);
+            StatusMessage = $"Добредојдовте, {result.Name}!";
+            if (LoginSucceeded is not null)
+                await LoginSucceeded(result);
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Sign-in cancelled.";
+            StatusMessage = "Најавата е откажана.";
             HasError = true;
         }
         catch (TimeoutException)
         {
-            StatusMessage = "Sign-in timed out. Please try again.";
+            StatusMessage = "Времето за најава истече. Обидете се повторно.";
             HasError = true;
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Sign-in failed: {ex.Message}";
+            StatusMessage = $"Најавата не успеа: {ex.Message}";
             HasError = true;
         }
         finally
@@ -84,5 +88,12 @@ public partial class LoginViewModel : ViewModelBase
     private void CancelLogin()
     {
         _loginCts?.Cancel();
+    }
+
+    /// <summary>Called by App.axaml.cs before re-showing this screen after a logout.</summary>
+    public void Reset()
+    {
+        StatusMessage = string.Empty;
+        HasError = false;
     }
 }

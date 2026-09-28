@@ -25,7 +25,15 @@ public partial class InvoiceViewModel : ObservableObject
     // without an acknowledgment on file for this month yet.
     public Action<UsageStatus>? OverageWarningRequested { get; set; }
 
+    // Wired by App.axaml.cs: signs the current account out and returns to the
+    // login screen, so a different account's invoices/clients/plan can load.
+    public Action? LogoutRequested { get; set; }
+
+    [RelayCommand]
+    private void Logout() => LogoutRequested?.Invoke();
+
     public IReadOnlyList<string> TaxOptions { get; } = VatRates.DisplayNames;
+    public IReadOnlyList<DocumentType> DocumentTypeOptions { get; } = DocumentTypes.All;
     public ObservableCollection<ClientRecord> SearchResults { get; } = new();
     public ObservableCollection<ClientRecord> AllClients { get; } = new();
     
@@ -45,7 +53,7 @@ public partial class InvoiceViewModel : ObservableObject
     [ObservableProperty] private DateTimeOffset _invoiceDate = DateTimeOffset.Now;
     [ObservableProperty] private DateTimeOffset _turnoverDate = DateTimeOffset.Now;
 
-    [ObservableProperty] private string _selectedDocumentType = "100";
+    [ObservableProperty] private DocumentType _selectedDocumentType = DocumentTypes.Invoice;
     
     [ObservableProperty] private decimal _netAmount;
     [ObservableProperty] private decimal _vatAmount;
@@ -57,7 +65,7 @@ public partial class InvoiceViewModel : ObservableObject
     partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(IsNotBusy));
 
     // Plan/usage badge for the sidebar (bound in MainWindow.axaml).
-    [ObservableProperty] private string _usagePlanLabel = "Free plan";
+    [ObservableProperty] private string _usagePlanLabel = "Бесплатен план";
     [ObservableProperty] private string _usageCountLabel = string.Empty;
     [ObservableProperty] private double _usageProgressFraction;
     [ObservableProperty] private bool _usageIsUnlimited;
@@ -65,7 +73,7 @@ public partial class InvoiceViewModel : ObservableObject
     // Environment banner for the main window (bound in MainWindow.axaml).
     public bool IsProduction => _settingsService.CurrentSettings.UseProductionEnvironment;
     public bool IsTest => !IsProduction;
-    public string EnvironmentBanner => IsProduction ? "● PRODUCTION (LIVE)" : "● TEST MODE";
+    public string EnvironmentBanner => IsProduction ? "● ПРОДУКЦИЈА (ВО ЖИВО)" : "● ТЕСТ РЕЖИМ";
 
     // Called after Settings is edited so the banner updates without a restart.
     public void RefreshEnvironment()
@@ -89,11 +97,29 @@ public partial class InvoiceViewModel : ObservableObject
         _pdfService = pdfService;
         _usageService = usageService;
 
-        _ = InitializeAsync();
+        // Deliberately NOT loaded here: this ViewModel is a long-lived singleton
+        // constructed the first time it's needed, which could be before we know
+        // which account is signed in. App.axaml.cs calls RefreshForUserAsync
+        // explicitly, once right after every login — first-ever and any
+        // logout -> different-account login within the same run.
     }
 
-    private async Task InitializeAsync()
+    /// <summary>
+    /// Loads this signed-in account's clients, next invoice number, and plan/usage
+    /// badge. Safe to call again after switching accounts.
+    /// </summary>
+    public async Task RefreshForUserAsync()
     {
+        // Clear whatever draft the previous account was mid-typing — it belongs
+        // to their session, not the one now signed in.
+        InvoiceItems.Clear();
+        SearchResults.Clear();
+        SearchQuery = string.Empty;
+        SelectedClient = null;
+        BuyerEdb = string.Empty;
+        BuyerName = string.Empty;
+        StatusMessage = string.Empty;
+
         await LoadAllClientsAsync();
         await GenerateNextInvoiceNumberAsync();
         await RefreshUsageAsync();
@@ -109,11 +135,11 @@ public partial class InvoiceViewModel : ObservableObject
         if (status is null)
             return;
 
-        UsagePlanLabel = (char.ToUpper(status.Plan[0]) + status.Plan[1..]) + " plan";
+        UsagePlanLabel = (char.ToUpper(status.Plan[0]) + status.Plan[1..]) + " план";
         UsageIsUnlimited = status.Limit is null;
         UsageCountLabel = UsageIsUnlimited
-            ? $"{status.Used} sent this month"
-            : $"{status.Used}/{status.Limit} this month";
+            ? $"{status.Used} испратени овој месец"
+            : $"{status.Used}/{status.Limit} овој месец";
         UsageProgressFraction = (!UsageIsUnlimited && status.Limit > 0)
             ? Math.Clamp((double)status.Used / status.Limit!.Value, 0, 1)
             : 0;
@@ -183,7 +209,7 @@ public partial class InvoiceViewModel : ObservableObject
         {
             BuyerEdb = value.Edb;
             BuyerName = value.Name;
-            StatusMessage = "Loaded from Local Address Book.";
+            StatusMessage = "Вчитано од локалниот адресар.";
         }
     }
 
@@ -195,13 +221,13 @@ public partial class InvoiceViewModel : ObservableObject
 
         try
         {
-            StatusMessage = "Looking up company in UJP Database...";
+            StatusMessage = "Се бара компанијата во базата на УЈП...";
             var company = await _ujpService.GetCompanyDetailsAsync(BuyerEdb);
-            
+
             if (company != null)
             {
                 BuyerName = company.Name;
-                StatusMessage = "Company found and saved to Address Book!";
+                StatusMessage = "Компанијата е пронајдена и зачувана во адресарот!";
 
                 // SILENTLY SAVE TO SQLITE!
                 await _databaseService.SaveClientAsync(new ClientRecord 
@@ -220,7 +246,7 @@ public partial class InvoiceViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error: {ex.Message}";
+            StatusMessage = $"Грешка: {ex.Message}";
         }
     }
 
@@ -232,7 +258,7 @@ public partial class InvoiceViewModel : ObservableObject
         var newItem = new DocItem 
         { 
             LineNo = InvoiceItems.Count + 1,
-            Desc = "New Item",
+            Desc = "Нова ставка",
             Qty = 1.0m,
             UnitPrice = 0.0m
         };
@@ -291,28 +317,28 @@ public partial class InvoiceViewModel : ObservableObject
     private string? ValidateInvoice()
     {
         if (InvoiceItems.Count == 0)
-            return "Add at least one line item before submitting.";
+            return "Додадете барем една ставка пред да поднесете.";
 
         if (string.IsNullOrWhiteSpace(BuyerEdb))
-            return "Please select or enter a buyer first.";
+            return "Прво изберете или внесете купувач.";
 
         string edbDigits = new string(BuyerEdb.Where(char.IsDigit).ToArray());
         if (edbDigits.Length != 13)
-            return "Buyer EDB (tax number) must be 13 digits.";
+            return "ЕДБ на купувачот (даночен број) мора да содржи 13 цифри.";
 
         foreach (var item in InvoiceItems)
         {
             if (string.IsNullOrWhiteSpace(item.Desc))
-                return $"Line {item.LineNo}: description is required.";
+                return $"Ред {item.LineNo}: описот е задолжителен.";
             if (item.Qty <= 0)
-                return $"Line {item.LineNo}: quantity must be greater than 0.";
+                return $"Ред {item.LineNo}: количината мора да биде поголема од 0.";
             if (item.UnitPrice < 0)
-                return $"Line {item.LineNo}: unit price cannot be negative.";
+                return $"Ред {item.LineNo}: единечната цена не може да биде негативна.";
         }
 
         RecalculateTotals();
         if (GrossAmount <= 0)
-            return "Invoice total must be greater than 0.";
+            return "Вкупниот износ на фактурата мора да биде поголем од 0.";
 
         return null;
     }
@@ -335,7 +361,7 @@ public partial class InvoiceViewModel : ObservableObject
         return new InvoicePdfModel
         {
             DocNumber = InvoiceNumber,
-            DocTypeName = "Фактура",
+            DocTypeName = SelectedDocumentType.Name,
             IssueDate = InvoiceDate.ToString("yyyy-MM-dd"),
             TurnoverDate = TurnoverDate.ToString("yyyy-MM-dd"),
 
@@ -354,7 +380,7 @@ public partial class InvoiceViewModel : ObservableObject
                 LineNo = i.LineNo,
                 Description = i.Desc,
                 Qty = i.Qty,
-                Unit = "pcs",
+                Unit = "ком.",
                 UnitPrice = i.UnitPrice,
                 VatLabel = i.TaxIndicator,
                 LineNet = Math.Round(i.RowNetTotal, 2),
@@ -374,12 +400,12 @@ public partial class InvoiceViewModel : ObservableObject
     {
         if (InvoiceItems.Count == 0)
         {
-            StatusMessage = "Add at least one line item before exporting a PDF.";
+            StatusMessage = "Додадете барем една ставка пред да извезете PDF.";
             return;
         }
         if (SavePdfFileAction == null)
         {
-            StatusMessage = "PDF export is not available in this context.";
+            StatusMessage = "Извезувањето во PDF не е достапно во овој контекст.";
             return;
         }
 
@@ -392,11 +418,11 @@ public partial class InvoiceViewModel : ObservableObject
             if (string.IsNullOrEmpty(path)) return; // user cancelled
 
             _pdfService.Save(model, path);
-            StatusMessage = $"PDF saved to {path}";
+            StatusMessage = $"PDF зачуван во {path}";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"PDF export failed: {ex.Message}";
+            StatusMessage = $"Извезувањето во PDF не успеа: {ex.Message}";
         }
     }
 
@@ -413,12 +439,12 @@ public partial class InvoiceViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            StatusMessage = "Preparing submission...";
+            StatusMessage = "Се подготвува испраќањето...";
             var buyerRecord = await _databaseService.GetClientByEdbAsync(BuyerEdb);
-            
+
             if (buyerRecord == null)
             {
-                StatusMessage = "Buyer address not found. Please click 'Lookup in UJP API' first to save their details.";
+                StatusMessage = "Адресата на купувачот не е пронајдена. Прво кликнете „Побарај во УЈП“ за да ги зачувате неговите податоци.";
                 return;
             }
 
@@ -443,6 +469,14 @@ public partial class InvoiceViewModel : ObservableObject
             // Generate the UJP document id up front so we can both send it and store it.
             string docId = Guid.NewGuid().ToString("N").Substring(0, 10);
 
+            // Per the UJP wiki's documented formula, docGrossAmountR is the gross amount
+            // rounded to a whole denar, and docFinalAmount = docGrossAmountR - docAvansAmount
+            // — both always whole numbers in every UJP example. We don't support advance
+            // payments yet, so docAvansAmount is 0 and docFinalAmount == docGrossAmountR.
+            int docAvansAmount = 0;
+            int docGrossAmountR = (int)Math.Round(GrossAmount, MidpointRounding.AwayFromZero);
+            int docFinalAmount = docGrossAmountR - docAvansAmount;
+
             // 3. Build the Payload using the translated codes
             var payload = new
             {
@@ -452,8 +486,8 @@ public partial class InvoiceViewModel : ObservableObject
                     header = new
                     {
                         docStorno = 0,
-                        docType = SelectedDocumentType,
-                        docTypeName = "Фактура",
+                        docType = SelectedDocumentType.Code,
+                        docTypeName = SelectedDocumentType.Name,
                         docDate = InvoiceDate.ToString("yyyy-MM-dd"),
                         docTurnoverDate = TurnoverDate.ToString("yyyy-MM-dd"),
                         docNumber = InvoiceNumber,
@@ -539,10 +573,10 @@ public partial class InvoiceViewModel : ObservableObject
                         docNetAmountDisc = Math.Round(NetAmount, 2),
                         docVatAmount = Math.Round(VatAmount, 2),
                         docGrossAmount = Math.Round(GrossAmount, 2),
-                        // ОВА Е КЛУЧНО: Мора да биде цел број (int) без децимали
-                        docGrossAmountR = (int)Math.Round(GrossAmount, MidpointRounding.AwayFromZero),
-                        docAvansAmount = 0,
-                        docFinalAmount = Math.Round(GrossAmount, 2)
+                        // Must be a whole number (denar) — see docGrossAmountR/docFinalAmount above.
+                        docGrossAmountR = docGrossAmountR,
+                        docAvansAmount = docAvansAmount,
+                        docFinalAmount = docFinalAmount
                     },
                     // Plug in the dynamic calculation we built at the top!
                     vatTotals = calculatedVatTotals
@@ -555,7 +589,7 @@ public partial class InvoiceViewModel : ObservableObject
             };
             string payloadJson = System.Text.Json.JsonSerializer.Serialize(payload, jsonOptions);
 
-            StatusMessage = "Signing and sending to UJP...";
+            StatusMessage = "Се потпишува и испраќа до УЈП...";
 
             // Submit. The service returns a populated result whether UJP accepts or rejects.
             var result = await _ujpService.SubmitInvoiceAsync(payload);
@@ -564,7 +598,7 @@ public partial class InvoiceViewModel : ObservableObject
             await _databaseService.SaveInvoiceAsync(new InvoiceRecord
             {
                 DocNumber = InvoiceNumber,
-                DocType = SelectedDocumentType,
+                DocType = SelectedDocumentType.Code,
                 DocId = docId,
                 BuyerEdb = buyerRecord.Edb,
                 BuyerName = buyerRecord.Name,
@@ -574,7 +608,7 @@ public partial class InvoiceViewModel : ObservableObject
                 VatAmount = Math.Round(VatAmount, 2),
                 GrossAmount = Math.Round(GrossAmount, 2),
                 Currency = "MKD",
-                Status = result.Success ? "Sent" : "Failed",
+                Status = result.Success ? "Испратено" : "Неуспешно",
                 HttpStatusCode = result.StatusCode,
                 PayloadJson = payloadJson,
                 SignedJws = result.SignedJws,
@@ -599,12 +633,12 @@ public partial class InvoiceViewModel : ObservableObject
             }
 
             StatusMessage = result.Success
-                ? $"SUCCESS! Invoice registered and saved to history. UJP: {result.ResponseBody}"
-                : $"REJECTED by UJP ({result.StatusCode}). Saved to history for review. {result.ResponseBody}";
+                ? $"УСПЕШНО! Фактурата е регистрирана и зачувана во историјата. УЈП: {result.ResponseBody}"
+                : $"ОДБИЕНА од УЈП ({result.StatusCode}). Зачувана во историјата за преглед. {result.ResponseBody}";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"SUBMISSION FAILED: {ex.Message}";
+            StatusMessage = $"ИСПРАЌАЊЕТО НЕ УСПЕА: {ex.Message}";
 
             // Even on a network/certificate failure, keep a record so work is never lost.
             try
@@ -612,7 +646,7 @@ public partial class InvoiceViewModel : ObservableObject
                 await _databaseService.SaveInvoiceAsync(new InvoiceRecord
                 {
                     DocNumber = InvoiceNumber,
-                    DocType = SelectedDocumentType,
+                    DocType = SelectedDocumentType.Code,
                     BuyerEdb = BuyerEdb ?? string.Empty,
                     BuyerName = BuyerName ?? string.Empty,
                     IssueDate = InvoiceDate.ToString("yyyy-MM-dd"),
@@ -621,7 +655,7 @@ public partial class InvoiceViewModel : ObservableObject
                     VatAmount = Math.Round(VatAmount, 2),
                     GrossAmount = Math.Round(GrossAmount, 2),
                     Currency = "MKD",
-                    Status = "Failed",
+                    Status = "Неуспешно",
                     UjpResponse = ex.Message
                 });
             }

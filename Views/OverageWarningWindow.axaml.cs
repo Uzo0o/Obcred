@@ -20,11 +20,11 @@ public partial class OverageWarningWindow : Window
     {
         InitializeComponent();
 
-        TitleText.Text = $"You've gone over your {planDisplayName} plan";
-        IntroText.Text = $"You're about to go over your {planDisplayName} plan's {limit} invoices this month.";
-        CostText.Text = $"Every invoice after that will cost {overagePerInvoice} MKD, added to your bill automatically at the end of the month.";
-        ChoiceText.Text = $"You can keep going on {planDisplayName} and pay per invoice, or switch to a plan with a higher included limit.";
-        StayOnPlanButton.Content = $"Yes, bill me {overagePerInvoice} MKD per invoice";
+        TitleText.Text = $"Го надминавте вашиот {planDisplayName} план";
+        IntroText.Text = $"На пат сте да ги надминете {limit} фактури овој месец, вклучени во вашиот {planDisplayName} план.";
+        CostText.Text = $"Секоја наредна фактура ќе чини {overagePerInvoice} МКД, автоматски додадени на вашата сметка на крајот на месецот.";
+        ChoiceText.Text = $"Можете да продолжите на {planDisplayName} и да плаќате по фактура, или да преминете на план со повисок вклучен лимит.";
+        StayOnPlanButton.Content = $"Да, наплатете ми {overagePerInvoice} МКД по фактура";
 
         StayOnPlanButton.Click += (_, _) => Close(OverageWarningResult.StayOnPlan);
         ChoosePlanButton.Click += (_, _) => Close(OverageWarningResult.ChoosePlan);
