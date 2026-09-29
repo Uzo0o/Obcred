@@ -30,13 +30,11 @@ namespace Obcred.Services;
 /// </summary>
 public class GoogleAuthService : IGoogleAuthService
 {
-    private const string WorkerBaseUrl = "https://broken-fog-91af.ustefan06.workers.dev";
+    private const string WorkerBaseUrl = ServiceUrls.Worker;
 
     // Bare route only — LoginWithGoogleAsync appends "?state=..." itself.
-    // Don't add a query string here, or you'll get two "?state=" glued
-    // together into one garbled value (ask me how I know).
-    private const string LoopbackPrefix = "http://localhost:5050/";
-    private const string GoogleLoginUrl = "https://broken-fog-91af.ustefan06.workers.dev/auth/google";
+    private const string LoopbackPrefix = "http://localhost:5050/";   // unchanged
+    private const string GoogleLoginUrl = "https://api.obcred.com/auth/google";
 
     private static readonly TimeSpan LoginTimeout = TimeSpan.FromMinutes(3);
 
