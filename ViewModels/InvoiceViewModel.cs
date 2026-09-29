@@ -54,7 +54,15 @@ public partial class InvoiceViewModel : ObservableObject
     [ObservableProperty] private DateTimeOffset _turnoverDate = DateTimeOffset.Now;
 
     [ObservableProperty] private DocumentType _selectedDocumentType = DocumentTypes.Invoice;
-    
+
+    // Reference document (испратница) — optional, per invoice. Maps to UJP's docReferences group.
+    [ObservableProperty] private string _deliveryNoteNumber = string.Empty;
+    [ObservableProperty] private DateTimeOffset? _deliveryNoteDate;
+
+    // Seeded from the settings default but editable per invoice, since the payment
+    // deadline can vary by client (maps to docPayment.docPaymentTypeDueDays).
+    [ObservableProperty] private int _paymentDueDays;
+
     [ObservableProperty] private decimal _netAmount;
     [ObservableProperty] private decimal _vatAmount;
     [ObservableProperty] private decimal _grossAmount;
@@ -119,6 +127,9 @@ public partial class InvoiceViewModel : ObservableObject
         BuyerEdb = string.Empty;
         BuyerName = string.Empty;
         StatusMessage = string.Empty;
+        DeliveryNoteNumber = string.Empty;
+        DeliveryNoteDate = null;
+        PaymentDueDays = _settingsService.CurrentSettings.DefaultPaymentDueDays;
 
         await LoadAllClientsAsync();
         await GenerateNextInvoiceNumberAsync();
@@ -343,6 +354,9 @@ public partial class InvoiceViewModel : ObservableObject
         return null;
     }
 
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength];
+
     private static string FormatAddress(string? street, string? number, string? zip, string? city)
     {
         var lines = new List<string>();
@@ -378,9 +392,10 @@ public partial class InvoiceViewModel : ObservableObject
             Lines = InvoiceItems.Select(i => new InvoicePdfLine
             {
                 LineNo = i.LineNo,
+                Code = i.ItemCode,
                 Description = i.Desc,
                 Qty = i.Qty,
-                Unit = "ком.",
+                Unit = string.IsNullOrWhiteSpace(i.Unit) ? "ком." : i.Unit,
                 UnitPrice = i.UnitPrice,
                 VatLabel = i.TaxIndicator,
                 LineNet = Math.Round(i.RowNetTotal, 2),
@@ -391,7 +406,21 @@ public partial class InvoiceViewModel : ObservableObject
             NetAmount = Math.Round(NetAmount, 2),
             VatAmount = Math.Round(VatAmount, 2),
             GrossAmount = Math.Round(GrossAmount, 2),
-            Currency = "MKD"
+            Currency = "MKD",
+
+            DeliveryNoteNumber = DeliveryNoteNumber ?? string.Empty,
+            DeliveryNoteDate = DeliveryNoteDate?.ToString("yyyy-MM-dd") ?? string.Empty,
+            PaymentDueDays = PaymentDueDays > 0 ? PaymentDueDays : null,
+            PaymentTermsNote = seller.PaymentTermsNote,
+            PaymentInterestNote = seller.PaymentInterestNote,
+            FooterNote = seller.InvoiceFooterNote,
+            BankName = seller.BankName,
+            BankAccount = seller.BankAccount,
+            Iban = seller.Iban,
+            ContactPhone = seller.ContactPhone,
+            ContactEmail = seller.ContactEmail,
+            Website = seller.Website,
+            AuthorizedSignerName = seller.AuthorizedSignerName
         };
     }
 
@@ -469,6 +498,35 @@ public partial class InvoiceViewModel : ObservableObject
             // Generate the UJP document id up front so we can both send it and store it.
             string docId = Guid.NewGuid().ToString("N").Substring(0, 10);
 
+            // docHeader (UJP01-12) is a free-text memo field whose spec explicitly calls
+            // for contact info + bank name + IBAN — so we compose it from the seller's
+            // saved defaults rather than asking for it again per invoice.
+            var headerNoteParts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(seller.ContactPhone)) headerNoteParts.Add($"Тел: {seller.ContactPhone}");
+            if (!string.IsNullOrWhiteSpace(seller.ContactEmail)) headerNoteParts.Add($"Е-пошта: {seller.ContactEmail}");
+            if (!string.IsNullOrWhiteSpace(seller.Website)) headerNoteParts.Add(seller.Website);
+            if (!string.IsNullOrWhiteSpace(seller.BankName)) headerNoteParts.Add($"Банка: {seller.BankName}");
+            if (!string.IsNullOrWhiteSpace(seller.BankAccount)) headerNoteParts.Add($"Жиро сметка: {seller.BankAccount}");
+            if (!string.IsNullOrWhiteSpace(seller.Iban)) headerNoteParts.Add($"IBAN: {seller.Iban}");
+            string docHeaderNote = Truncate(string.Join(" | ", headerNoteParts), 300);
+            string docFooterNote = Truncate(seller.InvoiceFooterNote ?? string.Empty, 300);
+            string docPaymentTermsNote = Truncate(seller.PaymentTermsNote ?? string.Empty, 200);
+            string docPaymentInterestNote = Truncate(seller.PaymentInterestNote ?? string.Empty, 100);
+
+            bool hasDeliveryNote = !string.IsNullOrWhiteSpace(DeliveryNoteNumber);
+            var docReferences = hasDeliveryNote
+                ? new[]
+                {
+                    new
+                    {
+                        docTypeRef = "900",
+                        docNameRef = "Испратница",
+                        docDateRef = (DeliveryNoteDate ?? InvoiceDate).ToString("yyyy-MM-dd"),
+                        docNumberRef = DeliveryNoteNumber
+                    }
+                }
+                : Array.Empty<object>();
+
             // Per the UJP wiki's documented formula, docGrossAmountR is the gross amount
             // rounded to a whole denar, and docFinalAmount = docGrossAmountR - docAvansAmount
             // — both always whole numbers in every UJP example. We don't support advance
@@ -491,8 +549,11 @@ public partial class InvoiceViewModel : ObservableObject
                         docDate = InvoiceDate.ToString("yyyy-MM-dd"),
                         docTurnoverDate = TurnoverDate.ToString("yyyy-MM-dd"),
                         docNumber = InvoiceNumber,
-                        docId = docId
+                        docId = docId,
+                        docHeader = docHeaderNote,
+                        docFooter = docFooterNote
                     },
+                    docReferences = docReferences,
                     seller = new
                     {
                         sellerCCode = "MK",
@@ -525,6 +586,9 @@ public partial class InvoiceViewModel : ObservableObject
                     {
                         docPaymentTypeCode = "P11",
                         docPaymentTypeDesc = "Плаќање со картичка",
+                        docPaymentTypeDueDays = PaymentDueDays > 0 ? (int?)PaymentDueDays : null,
+                        docPaymentTerms = docPaymentTermsNote,
+                        docPaymentInterest = docPaymentInterestNote,
                         docCurrency = "MKD",
                         docCurrencyCode = "MKD",
                         docCurrencyDate = InvoiceDate.ToString("yyyy-MM-dd"),
@@ -533,12 +597,14 @@ public partial class InvoiceViewModel : ObservableObject
                     docItems = InvoiceItems.Select(item =>
                     {
                         var rate = VatRates.FromDisplayName(item.TaxIndicator);
+                        string itemCode = string.IsNullOrWhiteSpace(item.ItemCode) ? "SKU-" + item.LineNo : item.ItemCode;
                         return new
                         {
                             docItemLineNo = item.LineNo,
-                            docItemSku = "SKU-" + item.LineNo,
+                            docItemSku = itemCode,
+                            docItemSenderCode = itemCode,
                             docItemDesc = item.Desc,
-                            docItemMUnit = "pcs",
+                            docItemMUnit = string.IsNullOrWhiteSpace(item.Unit) ? "ком." : item.Unit,
                             docItemQty = Math.Round(item.Qty, 3),
 
                             docItemUnitOriginalPriceWoVat = Math.Round(item.UnitPrice, 2),

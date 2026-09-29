@@ -41,6 +41,7 @@ public partial class App : Application
                     services.AddSingleton<IUserSettingsService, UserSettingsService>();
                     services.AddSingleton<IDatabaseService, DatabaseService>();
                     services.AddSingleton<IInvoicePdfService, InvoicePdfService>();
+                    services.AddSingleton<ITemplateImportService, TemplateImportService>();
 
                     // NEW: login window/viewmodel, shown before Settings/MainWindow.
                     services.AddSingleton<LoginWindow>();

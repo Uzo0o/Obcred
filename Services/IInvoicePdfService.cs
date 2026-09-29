@@ -14,9 +14,12 @@ public interface IInvoicePdfService
     void Save(InvoicePdfModel model, string filePath);
 
     /// <summary>Renders with an explicit template/logo/accent color, bypassing saved
-    /// settings — used by the PDF Template screen to preview a choice before it's saved.</summary>
-    byte[] Generate(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null);
+    /// settings — used by the PDF Template screen to preview a choice before it's saved.
+    /// headerImagePath/footerImagePath only matter for the "Custom" template.</summary>
+    byte[] Generate(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null,
+        string? headerImagePath = null, string? footerImagePath = null);
 
     /// <summary>Renders just the first page as a PNG, for a live on-screen preview.</summary>
-    byte[] GeneratePreviewImage(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null);
+    byte[] GeneratePreviewImage(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null,
+        string? headerImagePath = null, string? footerImagePath = null);
 }

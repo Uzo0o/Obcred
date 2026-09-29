@@ -11,7 +11,7 @@
              xmlns:viewModels="clr-namespace:Obcred.ViewModels">
 
     <ScrollViewer>
-        <Grid Classes="PageRoot" Margin="24,18,24,20" RowDefinitions="Auto,Auto">
+        <Grid Classes="PageRoot" Margin="24,18,24,20" RowDefinitions="Auto,Auto,Auto">
 
             <!-- ================= ROW 1: BUYER + DOCUMENT (separate cards) ================= -->
             <Grid Grid.Row="0" ColumnDefinitions="1.15*,1*" ColumnSpacing="16" Margin="0,0,0,14">
@@ -123,8 +123,35 @@
                 </Border>
             </Grid>
 
-            <!-- ================= ROW 2: LINE ITEMS ================= -->
-            <Border Grid.Row="1" Classes="Card D3">
+            <!-- ================= ROW 2: DELIVERY NOTE + PAYMENT TERMS ================= -->
+            <Border Grid.Row="1" Classes="Card D2" Margin="0,0,0,14">
+                <StackPanel Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="IconAvatar">
+                            <PathIcon Data="{StaticResource IconLayout}"/>
+                        </Border>
+                        <TextBlock Text="Испратница и рок за плаќање" Classes="CardHeaderStyle"/>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0">
+                            <Label Content="Бр. на испратница (опционално)"/>
+                            <TextBox Text="{Binding DeliveryNoteNumber}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <Label Content="Датум на испратница"/>
+                            <CalendarDatePicker SelectedDate="{Binding DeliveryNoteDate}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <Label Content="Рок за плаќање (денови)"/>
+                            <TextBox Text="{Binding PaymentDueDays}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ================= ROW 3: LINE ITEMS ================= -->
+            <Border Grid.Row="2" Classes="Card D3">
                 <Grid RowDefinitions="Auto,Auto,Auto">
 
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,12">
@@ -148,7 +175,9 @@
                             <DataGrid ItemsSource="{Binding InvoiceItems}" AutoGenerateColumns="False" BorderThickness="0"
                                       CanUserSortColumns="False">
                                 <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Код" Binding="{Binding ItemCode}" Width="100"/>
                                     <DataGridTextColumn Header="Ставка" Binding="{Binding Desc}" Width="*"/>
+                                    <DataGridTextColumn Header="Ед. мерка" Binding="{Binding Unit}" Width="90"/>
 
                                     <DataGridTemplateColumn Header="ДДВ" Width="130">
                                         <DataGridTemplateColumn.CellTemplate>

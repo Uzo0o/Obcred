@@ -48,6 +48,12 @@ public partial class DocItem : ObservableObject
     [ObservableProperty] private int _lineNo;
     [ObservableProperty] private string _desc = string.Empty;
 
+    // Maps to UJP's docItemSenderCode/docItemSku — the seller's own product code
+    // (e.g. Miho's "Ф 006" PVC-foil codes). Optional per the UJP spec.
+    [ObservableProperty] private string _itemCode = string.Empty;
+
+    [ObservableProperty] private string _unit = "ком.";
+
     // When these change, we tell the UI that the Totals changed too!
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RowNetTotal))]

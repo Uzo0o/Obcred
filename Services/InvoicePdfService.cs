@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -36,7 +37,8 @@ public class InvoicePdfService : IInvoicePdfService
     public byte[] Generate(InvoicePdfModel model)
     {
         var settings = _settingsService.CurrentSettings;
-        return Generate(model, settings.PdfTemplate, settings.PdfLogoPath, settings.PdfAccentColorId);
+        return Generate(model, settings.PdfTemplate, settings.PdfLogoPath, settings.PdfAccentColorId,
+            settings.HeaderImagePath, settings.FooterImagePath);
     }
 
     public void Save(InvoicePdfModel model, string filePath)
@@ -44,14 +46,18 @@ public class InvoicePdfService : IInvoicePdfService
         File.WriteAllBytes(filePath, Generate(model));
     }
 
-    public byte[] Generate(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null)
+    public byte[] Generate(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null,
+        string? headerImagePath = null, string? footerImagePath = null)
     {
-        return BuildDocument(model, templateId, TryLoadLogo(logoPath), PdfAccentColor.FromId(accentColorId)).GeneratePdf();
+        return BuildDocument(model, templateId, TryLoadLogo(logoPath), PdfAccentColor.FromId(accentColorId),
+            TryLoadLogo(headerImagePath), TryLoadLogo(footerImagePath)).GeneratePdf();
     }
 
-    public byte[] GeneratePreviewImage(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null)
+    public byte[] GeneratePreviewImage(InvoicePdfModel model, string templateId, string? logoPath, string? accentColorId = null,
+        string? headerImagePath = null, string? footerImagePath = null)
     {
-        return BuildDocument(model, templateId, TryLoadLogo(logoPath), PdfAccentColor.FromId(accentColorId))
+        return BuildDocument(model, templateId, TryLoadLogo(logoPath), PdfAccentColor.FromId(accentColorId),
+                TryLoadLogo(headerImagePath), TryLoadLogo(footerImagePath))
             .GenerateImages()
             .First();
     }
@@ -72,7 +78,8 @@ public class InvoicePdfService : IInvoicePdfService
         }
     }
 
-    private static IDocument BuildDocument(InvoicePdfModel model, string templateId, byte[]? logo, PdfAccentColor accent)
+    private static IDocument BuildDocument(InvoicePdfModel model, string templateId, byte[]? logo, PdfAccentColor accent,
+        byte[]? headerImage = null, byte[]? footerImage = null)
     {
         return Document.Create(container =>
         {
@@ -88,6 +95,9 @@ public class InvoicePdfService : IInvoicePdfService
                         break;
                     case "Minimal":
                         ComposeMinimal(page, model, logo, accent);
+                        break;
+                    case "Custom" when headerImage != null || footerImage != null:
+                        ComposeCustom(page, model, headerImage, footerImage, accent);
                         break;
                     default:
                         ComposeClassic(page, model, logo, accent);
@@ -143,6 +153,7 @@ public class InvoicePdfService : IInvoicePdfService
                 table.ColumnsDefinition(columns =>
                 {
                     columns.ConstantColumn(22);
+                    columns.ConstantColumn(52);
                     columns.RelativeColumn(3);
                     columns.RelativeColumn();
                     columns.RelativeColumn(1.4f);
@@ -154,6 +165,7 @@ public class InvoicePdfService : IInvoicePdfService
                 table.Header(header =>
                 {
                     ClassicHeaderCell(header, "#", accent);
+                    ClassicHeaderCell(header, "Код", accent);
                     ClassicHeaderCell(header, "Опис", accent);
                     ClassicHeaderCell(header, "Кол.", accent);
                     ClassicHeaderCell(header, "Цена", accent);
@@ -165,6 +177,7 @@ public class InvoicePdfService : IInvoicePdfService
                 foreach (var line in model.Lines)
                 {
                     ClassicBodyCell(table).Text(line.LineNo.ToString());
+                    ClassicBodyCell(table).Text(line.Code);
                     ClassicBodyCell(table).Text(line.Description);
                     ClassicBodyCell(table).AlignRight().Text(Num(line.Qty));
                     ClassicBodyCell(table).AlignRight().Text(Num(line.UnitPrice));
@@ -182,12 +195,16 @@ public class InvoicePdfService : IInvoicePdfService
             });
         });
 
-        page.Footer().AlignCenter().Text(t =>
+        page.Footer().Column(col =>
         {
-            t.Span("Страна ");
-            t.CurrentPageNumber();
-            t.Span(" / ");
-            t.TotalPages();
+            ComposeFooterNotes(col, model);
+            col.Item().PaddingTop(6).AlignCenter().Text(t =>
+            {
+                t.Span("Страна ");
+                t.CurrentPageNumber();
+                t.Span(" / ");
+                t.TotalPages();
+            });
         });
     }
 
@@ -261,6 +278,7 @@ public class InvoicePdfService : IInvoicePdfService
                 table.ColumnsDefinition(columns =>
                 {
                     columns.ConstantColumn(22);
+                    columns.ConstantColumn(52);
                     columns.RelativeColumn(3);
                     columns.RelativeColumn();
                     columns.RelativeColumn(1.4f);
@@ -272,6 +290,7 @@ public class InvoicePdfService : IInvoicePdfService
                 table.Header(header =>
                 {
                     ModernHeaderCell(header, "#", accent);
+                    ModernHeaderCell(header, "Код", accent);
                     ModernHeaderCell(header, "Опис", accent);
                     ModernHeaderCell(header, "Кол.", accent);
                     ModernHeaderCell(header, "Цена", accent);
@@ -286,6 +305,7 @@ public class InvoicePdfService : IInvoicePdfService
                     string bg = i % 2 == 0 ? Colors.White : accent.Light;
 
                     ModernBodyCell(table, bg).Text(line.LineNo.ToString());
+                    ModernBodyCell(table, bg).Text(line.Code);
                     ModernBodyCell(table, bg).Text(line.Description);
                     ModernBodyCell(table, bg).AlignRight().Text(Num(line.Qty));
                     ModernBodyCell(table, bg).AlignRight().Text(Num(line.UnitPrice));
@@ -310,15 +330,20 @@ public class InvoicePdfService : IInvoicePdfService
                         .Bold().FontSize(13).FontColor(accent.Mid);
                 });
             });
+
         });
 
-        page.Footer().PaddingBottom(20).AlignCenter().Text(t =>
+        page.Footer().PaddingBottom(20).Column(col =>
         {
-            t.DefaultTextStyle(s => s.FontColor("#94A3B8").FontSize(9));
-            t.Span("Страна ");
-            t.CurrentPageNumber();
-            t.Span(" / ");
-            t.TotalPages();
+            ComposeFooterNotes(col, model);
+            col.Item().PaddingTop(6).AlignCenter().Text(t =>
+            {
+                t.DefaultTextStyle(s => s.FontColor("#94A3B8").FontSize(9));
+                t.Span("Страна ");
+                t.CurrentPageNumber();
+                t.Span(" / ");
+                t.TotalPages();
+            });
         });
     }
 
@@ -390,6 +415,7 @@ public class InvoicePdfService : IInvoicePdfService
             {
                 table.ColumnsDefinition(columns =>
                 {
+                    columns.ConstantColumn(46);
                     columns.RelativeColumn(3);
                     columns.RelativeColumn();
                     columns.RelativeColumn(1.4f);
@@ -399,6 +425,7 @@ public class InvoicePdfService : IInvoicePdfService
 
                 table.Header(header =>
                 {
+                    MinimalHeaderCell(header, "Код");
                     MinimalHeaderCell(header, "Опис");
                     MinimalHeaderCell(header, "Кол.");
                     MinimalHeaderCell(header, "Цена");
@@ -408,6 +435,7 @@ public class InvoicePdfService : IInvoicePdfService
 
                 foreach (var line in model.Lines)
                 {
+                    MinimalBodyCell(table).Text(line.Code);
                     MinimalBodyCell(table).Text(line.Description);
                     MinimalBodyCell(table).AlignRight().Text(Num(line.Qty));
                     MinimalBodyCell(table).AlignRight().Text(Num(line.UnitPrice));
@@ -428,14 +456,19 @@ public class InvoicePdfService : IInvoicePdfService
                         .FontSize(13).Bold().FontColor(accent.Dark);
                 });
             });
+
         });
 
-        page.Footer().AlignCenter().Text(t =>
+        page.Footer().Column(col =>
         {
-            t.DefaultTextStyle(s => s.FontColor("#CBD5E1").FontSize(8));
-            t.CurrentPageNumber();
-            t.Span(" / ");
-            t.TotalPages();
+            ComposeFooterNotes(col, model);
+            col.Item().PaddingTop(6).AlignCenter().Text(t =>
+            {
+                t.DefaultTextStyle(s => s.FontColor("#CBD5E1").FontSize(8));
+                t.CurrentPageNumber();
+                t.Span(" / ");
+                t.TotalPages();
+            });
         });
     }
 
@@ -466,8 +499,191 @@ public class InvoicePdfService : IInvoicePdfService
     }
 
     // ======================================================================
+    // CUSTOM — the letterhead/footer are rasterized crops of the user's own
+    // reference invoice (imported via the PDF Template screen); everything
+    // between them — buyer, item table, totals, signature — is still our own
+    // generated content, exactly like the other three templates.
+    // ======================================================================
+    private static void ComposeCustom(PageDescriptor page, InvoicePdfModel model, byte[]? headerImage, byte[]? footerImage, PdfAccentColor accent)
+    {
+        page.Margin(0);
+
+        if (headerImage != null)
+            page.Header().Image(headerImage).FitWidth();
+
+        page.Footer().Column(col =>
+        {
+            if (footerImage != null)
+                col.Item().Image(footerImage).FitWidth();
+
+            // Bank/contact is already baked into the footer image above, so only the
+            // per-invoice bits (delivery note, payment terms, footer clause) render as text.
+            ComposeFooterNotes(col, model, includeBankInfo: false);
+
+            col.Item().PaddingTop(4).AlignCenter().Text(t =>
+            {
+                t.DefaultTextStyle(s => s.FontColor("#94A3B8").FontSize(8));
+                t.Span("Страна ");
+                t.CurrentPageNumber();
+                t.Span(" / ");
+                t.TotalPages();
+            });
+        });
+
+        page.Content().Padding(36).Column(col =>
+        {
+            col.Item().Row(row =>
+            {
+                row.RelativeItem().Column(c =>
+                {
+                    c.Item().Text(model.DocTypeName).FontSize(20).Bold().FontColor(accent.Dark);
+                    c.Item().Text($"Бр.: {model.DocNumber}").FontSize(11);
+                });
+
+                row.ConstantItem(200).Column(c =>
+                {
+                    c.Item().AlignRight().Text($"Датум: {model.IssueDate}");
+                    c.Item().AlignRight().Text($"Датум на промет: {model.TurnoverDate}");
+                });
+            });
+
+            col.Item().PaddingTop(8).LineHorizontal(1).LineColor("#E2E8F0");
+
+            // No seller box — the seller's identity is already part of the header image.
+            col.Item().PaddingTop(14).Width(260).Element(c => ClassicParty(c, "Купувач",
+                model.BuyerName, model.BuyerEdb, model.BuyerVatNumber, model.BuyerAddress));
+
+            col.Item().PaddingTop(14).Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.ConstantColumn(22);
+                    columns.ConstantColumn(52);
+                    columns.RelativeColumn(3);
+                    columns.RelativeColumn();
+                    columns.RelativeColumn(1.4f);
+                    columns.RelativeColumn();
+                    columns.RelativeColumn(1.4f);
+                    columns.RelativeColumn(1.4f);
+                });
+
+                table.Header(header =>
+                {
+                    ClassicHeaderCell(header, "#", accent);
+                    ClassicHeaderCell(header, "Код", accent);
+                    ClassicHeaderCell(header, "Опис", accent);
+                    ClassicHeaderCell(header, "Кол.", accent);
+                    ClassicHeaderCell(header, "Цена", accent);
+                    ClassicHeaderCell(header, "ДДВ", accent);
+                    ClassicHeaderCell(header, "Основа", accent);
+                    ClassicHeaderCell(header, "Вкупно", accent);
+                });
+
+                foreach (var line in model.Lines)
+                {
+                    ClassicBodyCell(table).Text(line.LineNo.ToString());
+                    ClassicBodyCell(table).Text(line.Code);
+                    ClassicBodyCell(table).Text(line.Description);
+                    ClassicBodyCell(table).AlignRight().Text(Num(line.Qty));
+                    ClassicBodyCell(table).AlignRight().Text(Num(line.UnitPrice));
+                    ClassicBodyCell(table).AlignRight().Text(line.VatLabel);
+                    ClassicBodyCell(table).AlignRight().Text(Num(line.LineNet));
+                    ClassicBodyCell(table).AlignRight().Text(Num(line.LineGross));
+                }
+            });
+
+            col.Item().PaddingTop(12).AlignRight().Column(c =>
+            {
+                TotalsRow(c, "Основа:", Num(model.NetAmount), model.Currency, false, accent);
+                TotalsRow(c, "ДДВ:", Num(model.VatAmount), model.Currency, false, accent);
+                TotalsRow(c, "Вкупно:", Num(model.GrossAmount), model.Currency, true, accent);
+            });
+
+            if (!string.IsNullOrWhiteSpace(model.AuthorizedSignerName))
+            {
+                col.Item().PaddingTop(30).Row(row =>
+                {
+                    row.RelativeItem().Text("Фактурирал: ________________     м.п.").FontSize(9);
+                    row.ConstantItem(220).Column(c =>
+                    {
+                        c.Item().AlignCenter().Text("Овластено лице за потпис на фактура").FontSize(8).FontColor("#64748B");
+                        c.Item().AlignCenter().PaddingTop(14).Text(model.AuthorizedSignerName).Bold();
+                    });
+                });
+            }
+        });
+    }
+
+    // ======================================================================
     // Shared helpers
     // ======================================================================
+
+    // Renders the block every template shares beneath the totals: delivery-note
+    // reference, payment terms, a free-text footer clause (dispute/devaluation/
+    // complaint), and fixed bank/contact details — each shown only when filled in.
+    private static void ComposeFooterNotes(ColumnDescriptor col, InvoicePdfModel model, bool includeBankInfo = true)
+    {
+        bool hasDelivery = !string.IsNullOrWhiteSpace(model.DeliveryNoteNumber);
+        bool hasPaymentTerms = model.PaymentDueDays is > 0
+            || !string.IsNullOrWhiteSpace(model.PaymentTermsNote)
+            || !string.IsNullOrWhiteSpace(model.PaymentInterestNote);
+        bool hasFooterNote = !string.IsNullOrWhiteSpace(model.FooterNote);
+        bool hasBankInfo = includeBankInfo && (!string.IsNullOrWhiteSpace(model.BankName)
+            || !string.IsNullOrWhiteSpace(model.BankAccount)
+            || !string.IsNullOrWhiteSpace(model.Iban)
+            || !string.IsNullOrWhiteSpace(model.ContactPhone)
+            || !string.IsNullOrWhiteSpace(model.ContactEmail)
+            || !string.IsNullOrWhiteSpace(model.Website));
+
+        if (!hasDelivery && !hasPaymentTerms && !hasFooterNote && !hasBankInfo)
+            return;
+
+        col.Item().PaddingTop(16).LineHorizontal(1).LineColor("#E2E8F0");
+
+        col.Item().PaddingTop(10).Column(c =>
+        {
+            if (hasDelivery)
+            {
+                string deliveryText = string.IsNullOrWhiteSpace(model.DeliveryNoteDate)
+                    ? $"По испратница бр. {model.DeliveryNoteNumber}"
+                    : $"По испратница бр. {model.DeliveryNoteNumber} од {model.DeliveryNoteDate}";
+                c.Item().PaddingBottom(4).Text(deliveryText).FontSize(9).FontColor("#475569");
+            }
+
+            if (hasPaymentTerms)
+            {
+                var parts = new List<string>();
+                if (model.PaymentDueDays is > 0)
+                    parts.Add($"Плаќање {model.PaymentDueDays} дена од датум на фактура.");
+                if (!string.IsNullOrWhiteSpace(model.PaymentTermsNote))
+                    parts.Add(model.PaymentTermsNote);
+                if (!string.IsNullOrWhiteSpace(model.PaymentInterestNote))
+                    parts.Add(model.PaymentInterestNote);
+                c.Item().PaddingBottom(4).Text(string.Join(" ", parts)).FontSize(8.5f).FontColor("#64748B");
+            }
+
+            if (hasFooterNote)
+                c.Item().PaddingBottom(8).Text(model.FooterNote).FontSize(8.5f).FontColor("#64748B");
+
+            if (hasBankInfo)
+            {
+                var bankParts = new List<string>();
+                if (!string.IsNullOrWhiteSpace(model.BankName)) bankParts.Add($"Банка: {model.BankName}");
+                if (!string.IsNullOrWhiteSpace(model.BankAccount)) bankParts.Add($"Жиро сметка: {model.BankAccount}");
+                if (!string.IsNullOrWhiteSpace(model.Iban)) bankParts.Add($"IBAN: {model.Iban}");
+                if (bankParts.Count > 0)
+                    c.Item().Text(string.Join("   •   ", bankParts)).FontSize(8).FontColor("#94A3B8");
+
+                var contactParts = new List<string>();
+                if (!string.IsNullOrWhiteSpace(model.ContactPhone)) contactParts.Add($"Тел: {model.ContactPhone}");
+                if (!string.IsNullOrWhiteSpace(model.ContactEmail)) contactParts.Add($"Е-пошта: {model.ContactEmail}");
+                if (!string.IsNullOrWhiteSpace(model.Website)) contactParts.Add(model.Website);
+                if (contactParts.Count > 0)
+                    c.Item().PaddingTop(2).Text(string.Join("   •   ", contactParts)).FontSize(8).FontColor("#94A3B8");
+            }
+        });
+    }
+
     private static void TotalsRow(ColumnDescriptor c, string label, string value, string currency, bool bold, PdfAccentColor accent)
     {
         c.Item().Width(240).Row(r =>

@@ -26,6 +26,8 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
         <PackageReference Include="jose-jwt" Version="5.3.0" />
+        <PackageReference Include="PdfPig" Version="0.1.16" />
+        <PackageReference Include="PDFtoImage" Version="5.4.0" />
         <PackageReference Include="QuestPDF" Version="2026.7.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />

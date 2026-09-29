@@ -17,7 +17,10 @@ public partial class PdfSettingsView : UserControl
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         if (DataContext is PdfSettingsViewModel vm)
+        {
             vm.BrowseLogoFileAction = PromptForLogoAsync;
+            vm.BrowseTemplatePdfFileAction = PromptForTemplatePdfAsync;
+        }
     }
 
     private async Task<string?> PromptForLogoAsync()
@@ -33,6 +36,25 @@ public partial class PdfSettingsView : UserControl
             FileTypeFilter = new[]
             {
                 new FilePickerFileType("Слики") { Patterns = new[] { "*.png", "*.jpg", "*.jpeg" } }
+            }
+        });
+
+        return files.Count > 0 ? files[0].Path.LocalPath : null;
+    }
+
+    private async Task<string?> PromptForTemplatePdfAsync()
+    {
+        var top = TopLevel.GetTopLevel(this);
+        if (top == null)
+            return null;
+
+        var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Изберете постоечка фактура (PDF)",
+            AllowMultiple = false,
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("PDF документи") { Patterns = new[] { "*.pdf" } }
             }
         });
 
